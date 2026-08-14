@@ -1,0 +1,135 @@
+\documentclass[letterpaper, 12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+%\usepackage{comment}
+%\usepackage{natbib}
+%\usepackage{apacite}
+%\usepackage[backend=biber,style=apa]{biblatex}
+\usepackage{amssymb,amsmath,amsthm}
+%\usepackage{subfigure} %incluir mas imagenes por figura
+\usepackage{float}
+\usepackage{verbatim}
+\usepackage{fancyhdr}
+\usepackage{setspace} % paquete para interlineado 
+\usepackage{amssymb, amsmath, amsthm}
+%\usepackage{appendix}
+%\renewcommand{\appendixname}{Anexos}
+%\renewcommand{\appendixtocname}{Anexos}
+%\renewcommand{\appendixpagename}{Anexos}
+\usepackage{pdfpages}
+
+\usepackage{cite}
+\usepackage[Algoritmo]{algorithm}
+\usepackage{algorithmic}
+%%\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{array}
+
+%agregadas independiente de la plantilla
+\usepackage{soul}
+\usepackage{subfig}
+\usepackage{threeparttable}
+
+
+\newlength\myindent
+\setlength\myindent{2em}
+\newcommand\bindent{%
+  \begingroup
+  \setlength{\itemindent}{\myindent}
+  \addtolength{\algorithmicindent}{\myindent}
+}
+\newcommand\eindent{\endgroup}
+
+
+\sloppy
+%\pagestyle{fancy}
+\renewcommand{\sectionmark}[1]{\markright{#1}{}}
+\rhead{\large\thepage}  %  right header: document title
+\lhead{\small\bfseries \nouppercase{\leftmark}}
+\cfoot{}
+
+%\geometry{left=3cm, right=2.5cm, top=3cm, bottom=3cm}
+\newtheorem{teo}{{\sc Teorema}}
+
+\pretolerance=3000
+\tolerance=3000
+\oddsidemargin 1.0cm \headsep 0.5cm \textwidth=15.5cm \textheight=22cm
+\usepackage{pgfplots}
+\usetikzlibrary{patterns}
+\pgfplotsset{compat=1.5, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize}}
+
+
+
+\begin{document}
+\newcommand{\etal}[0]{\textit{et al.}}
+\renewcommand{\tablename}{Tabla}
+\renewcommand{\listtablename}{{\'I}ndice de tablas}
+
+%\maketitle
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\input{01-TapaUCM1.tex}
+\newpage
+\input{02-TapaUCM2.tex}
+\newpage
+%\input{TapaLFDP.tex}
+\newpage
+\newpage
+
+\pagenumbering{roman}
+\input{03-agradecimientos.tex}
+\newpage
+\input{04-1resumen.tex}
+\newpage
+\input{04-2abstract.tex}
+\newpage
+
+\thispagestyle{empty}
+\tableofcontents
+%\newpage\renewcommand{\listfigurename}{Índice de Figuras}
+\newpage
+
+%Indices de tablas y figuras
+\listoffigures
+\newpage
+%\newpage\renewcommand{\listtablename}{Índice de Tablas}
+\listoftables
+\newpage
+\pagestyle{fancy}
+\newpage
+\pagenumbering{arabic}
+
+
+\newpage
+\input{05-intro.tex}
+\newpage
+\input{06-marco_teorico.tex}
+\newpage
+\input{07-estado_del_arte.tex}
+\newpage
+\input{08-metodos.tex}
+\newpage
+\input{09-resultados.tex}
+\newpage
+\input{10-conclusion.tex}
+\newpage
+%\input{11-anexos.tex}
+%\newpage
+
+% ----------------------------------------------------------------
+%\newpage % Salto de pagina para poner referencias solas en una pagina
+%\bibliographystyle{abbrv}
+%\bibliography{BiblioRegistracion}
+\newpage
+\bibliographystyle{plain}
+% https://www.overleaf.com/learn/latex/bibtex_bibliography_styles
+%\bibliographystyle{APA/apa-good}
+%\bibliographystyle{alpha}
+\bibliography{biblio}
+\pagestyle{fancy}
+
+\end{document}
+

@@ -1,0 +1,57 @@
+\section{Marco Teórico}\label{sec:background}
+\begin{spacing}{1.5}
+\subsection{Introducción}
+
+A continuación, se presentan los conocimientos necesarios para...
+
+
+
+\subsection{sub sección1}\label{subsec1}
+Ejemplo referencia Figura \ref{ej1}. Al nombrar una Figura con referencia la primera letra es en mayúscula. Mismo para Tablas y Algoritmos.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{fig/speedup_vs_1gpu_double.eps} 
+	\caption {Caption de la figura.}  
+	\label{ej1}
+\end{figure}
+
+\subsection{sub sección2}\label{subsec1}
+
+Ejemplo Algoritmo \ref{alg_ss}.
+
+\begin{algorithm}[H]
+
+    \begin{algorithmic}[1]
+        \FOR{i = 0; i < tamaño - 1 ; i++}
+                \STATE min\_id = i
+            \FOR{j = i + 1; j < tamaño ; j++}
+                \IF{Arr[j] < Arr[min\_id]}
+                    \STATE min\_id = j
+                \ENDIF
+                
+            \ENDFOR
+                \IF{ min\_id != i}
+                    \STATE Cambio(Arr[min\_id], Arr[i])
+                    \ENDIF
+         \ENDFOR
+    
+    \end{algorithmic}
+    \caption{\label{alg_ss} Selection Sort(arr[ ], tamaño).}
+\end{algorithm}
+
+
+
+\subsection{sub sección3}\label{subsec3}
+
+Ejemplo Ecuación \ref{ec:1}:
+
+\begin{equation}\label{ec:1}
+A_{i,j} = \frac{B_{i}}{C^{j}}
+\end{equation}
+
+
+Ejemplo ecuación en texto $A_{i,j} = \frac{B_{i}}{C^{j}}$
+
+\end{spacing}
+
