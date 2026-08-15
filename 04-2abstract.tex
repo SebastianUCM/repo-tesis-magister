@@ -1,6 +1,14 @@
 \section*{Abstract}
 \begin{spacing}{1.4}
 
-Resumen de la tesis en ingles. Incluir resultados y conclusiones más relevantes.
+The advancement of Artificial Intelligence (AI) in healthcare is limited by the lack of diverse, high-quality, and correctly labeled datasets, especially for rare cardiac conditions. This research presents the development of a parametric synthetic electrocardiogram (ECG) generator based on the superposition of asymmetric Gaussian functions. Unlike deep generative models (e.g., GANs) that lack physiological control, this parametric approach offers explicit interpretability and precise morphological representation of the P-QRS-T cycle.
+
+By employing numerical optimization algorithms (L-BFGS-B) and using the MIT-BIH Arrhythmia Database as a seed, the model calibrates parameters to reproduce the morphology of real signals. Validation was carried out on 2,238 normal sinus beats from record 100 of that database, yielding a mean Pearson correlation of 0.9647 (standard deviation 0.0108) and a mean RMSE of 0.3985 (standard deviation 0.0287) in normalized signal units. Residual analysis identified two specific model limitations: saturation of the upper bound on R-wave amplitude, and the absence of a baseline term.
+
+These results confirm the viability of the parametric approach for reproducing P-QRS-T morphology in normal sinus rhythm. The integration of clinical rule engines (Rijnbeek/AHA) to simulate demographic variability and specific pathologies such as ST-segment elevation and Atrial Fibrillation is proposed as the immediate extension of this work, and falls outside the scope validated at this stage.
+
+\vspace{0.5cm}
+
+\noindent\textbf{Keywords:} Synthetic ECG, Gaussian Models, Numerical Optimization, Physiological Variability, Data Augmentation.
 
 \end{spacing}

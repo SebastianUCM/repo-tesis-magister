@@ -1,57 +1,91 @@
 \section{Marco Teórico}\label{sec:background}
 \begin{spacing}{1.5}
+
 \subsection{Introducción}
 
-A continuación, se presentan los conocimientos necesarios para...
+Este capítulo establece los fundamentos necesarios para justificar las decisiones de modelado adoptadas en esta investigación. Se organiza en cuatro bloques: los fundamentos electrofisiológicos que dan origen a la señal electrocardiográfica, los paradigmas disponibles para modelarla matemáticamente, la justificación específica del uso de funciones Gaussianas, y la discusión sobre el papel del volumen de datos y de los enfoques supervisados y no supervisados en el diagnóstico asistido.
 
+\subsection{Fundamentos electrofisiológicos de la señal electrocardiográfica}
 
+El electrocardiograma es el registro en superficie corporal de la actividad eléctrica generada por la despolarización y repolarización sucesivas del miocardio. Su base celular fue establecida por Hodgkin y Huxley \cite{hodgkin1952quantitative}, quienes formularon una descripción cuantitativa del flujo de corriente iónica a través de la membrana mediante un sistema de ecuaciones diferenciales ordinarias que relaciona las conductancias de sodio y potasio con el potencial de membrana y el tiempo.
 
-\subsection{sub sección1}\label{subsec1}
-Ejemplo referencia Figura \ref{ej1}. Al nombrar una Figura con referencia la primera letra es en mayúscula. Mismo para Tablas y Algoritmos.
+Noble \cite{noble1962modification} adaptó posteriormente dicho formalismo a las fibras de Purkinje cardíacas, cuyos potenciales de acción son de duración considerablemente mayor que los del axón de calamar originalmente estudiado, y en las que la despolarización disminuye la permeabilidad al potasio. Esta adaptación constituye el punto de partida del modelado biofísico del tejido cardíaco.
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[scale=0.5]{fig/speedup_vs_1gpu_double.eps} 
-	\caption {Caption de la figura.}  
-	\label{ej1}
-\end{figure}
+La evolución del campo desde la bioelectricidad celular hasta sus aplicaciones clínicas ha sido documentada bibliométricamente por Choca et al. \cite{choca2025electrofisiologia}, quienes reportan un crecimiento sostenido de la producción científica en electrofisiología cardíaca, con un incremento notable en las últimas dos décadas.
 
-\subsection{sub sección2}\label{subsec1}
+En el trazado de superficie, esta actividad se manifiesta como una secuencia característica de deflexiones: la onda P, correspondiente a la despolarización auricular; el complejo QRS, asociado a la despolarización ventricular; y la onda T, que refleja la repolarización ventricular. La interpretación sistemática de estas deflexiones y de los intervalos que las separan constituye una competencia clínica fundamental \cite{zumba2023evaluacion}.
 
-Ejemplo Algoritmo \ref{alg_ss}.
+Resulta relevante para esta investigación que la morfología considerada normal no es única. Corrado et al. \cite{corrado2009twelve} documentan que en atletas altamente entrenados la bradicardia sinusal alcanza prevalencias de hasta el 80\%, el bloqueo auriculoventricular de primer grado el 35\% y la repolarización temprana entre el 50\% y el 80\%, sin que ello constituya patología. La frontera entre variante fisiológica y hallazgo patológico depende del contexto demográfico del sujeto, lo que anticipa la necesidad de parametrizar dicho contexto en cualquier generador de señales sintéticas.
 
-\begin{algorithm}[H]
+\subsection{Paradigmas de modelado de la señal electrocardiográfica}
 
-    \begin{algorithmic}[1]
-        \FOR{i = 0; i < tamaño - 1 ; i++}
-                \STATE min\_id = i
-            \FOR{j = i + 1; j < tamaño ; j++}
-                \IF{Arr[j] < Arr[min\_id]}
-                    \STATE min\_id = j
-                \ENDIF
-                
-            \ENDFOR
-                \IF{ min\_id != i}
-                    \STATE Cambio(Arr[min\_id], Arr[i])
-                    \ENDIF
-         \ENDFOR
-    
-    \end{algorithmic}
-    \caption{\label{alg_ss} Selection Sort(arr[ ], tamaño).}
-\end{algorithm}
+La literatura ofrece tres familias de aproximaciones al modelado de señales ECG, que se distinguen por el nivel de descripción que adoptan.
 
+\subsubsection{Modelos biofísicos}
 
+Descienden directamente del formalismo de Hodgkin-Huxley \cite{hodgkin1952quantitative} y de su adaptación cardíaca \cite{noble1962modification}. Describen los mecanismos iónicos subyacentes y poseen, por tanto, el mayor poder explicativo. Su limitación para el propósito de esta investigación es doble: el costo computacional de integrar sistemas de ecuaciones diferenciales acopladas para cada latido, y el hecho de que su salida natural es el potencial de acción celular, no el trazado de superficie, cuya obtención requiere resolver adicionalmente el problema directo de la electrocardiografía.
 
-\subsection{sub sección3}\label{subsec3}
+\subsubsection{Modelos fenomenológicos dinámicos}
 
-Ejemplo Ecuación \ref{ec:1}:
+Renuncian a describir el mecanismo celular y se concentran en reproducir la forma de la onda. El referente del área es el modelo de McSharry et al. \cite{mcsharry2003dynamical}, que genera la señal mediante un sistema de tres ecuaciones diferenciales ordinarias acopladas cuya trayectoria recorre un ciclo límite tridimensional. El modelo reproduce con realismo la variabilidad de la frecuencia cardíaca y permite prescribir el espectro de potencia de los intervalos R-R.
 
-\begin{equation}\label{ec:1}
-A_{i,j} = \frac{B_{i}}{C^{j}}
-\end{equation}
+Sus propios autores reconocen dos limitaciones pertinentes: la validación se apoyó en comparación visual sin reportar métricas cuantitativas de error, y los parámetros de los eventos P-QRS-T fueron derivados de análisis visual subjetivo.
 
+\subsubsection{Modelos paramétricos por descomposición}
 
-Ejemplo ecuación en texto $A_{i,j} = \frac{B_{i}}{C^{j}}$
+Describen la señal como una combinación lineal de funciones elementales cuyos parámetros se ajustan a datos reales. Clifford et al. \cite{clifford2004model} demostraron que la descomposición mediante suma de funciones Gaussianas es computacionalmente eficiente y permite una parametrización precisa de la asimetría de las ondas, propiedad especialmente relevante para representar morfologías isquémicas en las que el segmento ST resulta crítico.
+
+\subsection{Justificación del uso de funciones Gaussianas}
+
+La elección de la función Gaussiana como primitiva morfológica no es arbitraria, y conviene explicitar los cinco argumentos que la sostienen frente a las alternativas disponibles.
+
+\textbf{Correspondencia con la forma de la señal.} Cada deflexión del ciclo P-QRS-T es un pulso unimodal, con un máximo bien definido y decaimiento a ambos lados. La Gaussiana es la función más simple que reproduce esa forma con únicamente tres parámetros, y presenta la ventaja de que cada uno posee interpretación fisiológica directa: la amplitud corresponde al voltaje de la deflexión, la posición al instante del evento eléctrico dentro del ciclo, y el ancho a su duración. Un ajuste de la onda R no produce coeficientes abstractos, sino magnitudes que un cardiólogo puede evaluar.
+
+\textbf{Continuidad con el estándar del área.} El modelo de McSharry et al. \cite{mcsharry2003dynamical}, referente de la simulación de ECG, emplea internamente términos Gaussianos como forzamiento angular para generar la morfología P-QRS-T. Las Gaussianas ya son la primitiva morfológica del modelo dinámico de referencia. Adoptarlas directamente conserva esa base morfológica y elimina el costo de integrar el sistema de ecuaciones diferenciales, lo cual resulta determinante cuando el objetivo es generar volúmenes elevados de latidos.
+
+\textbf{Ventaja frente a otras bases de descomposición.} Las bases ortogonales de propósito general, como las wavelets o los polinomios por tramos, permiten aproximar la señal con error arbitrariamente pequeño, pero sus coeficientes carecen de significado clínico: no existe un coeficiente wavelet que corresponda a la amplitud de la onda R. Dado que el propósito de esta investigación es generar señales con control fisiológico explícito, y no meramente comprimirlas o reconstruirlas, la interpretabilidad de los parámetros constituye un requisito y no una preferencia estética.
+
+\textbf{Ventaja frente a los enfoques basados en redes neuronales informadas por la física.} Las Physics Informed Neural Networks constituyen una alternativa contemporánea para incorporar restricciones físicas al aprendizaje \cite{sophiya2025pinns}. Su aplicabilidad al problema abordado es limitada: requieren disponer de la ecuación diferencial que gobierna el fenómeno, y el ECG de superficie no admite una formulación compacta equivalente. La literatura reporta además dificultades de convergencia y un elevado costo computacional en problemas de alta dimensión.
+
+\textbf{Extensión a la Gaussiana asimétrica.} La Gaussiana clásica es simétrica respecto de su centro, mientras que las deflexiones reales no lo son: la onda T presenta característicamente una fase ascendente más lenta que la descendente. Permitir anchos diferenciados a cada lado del centro captura esta propiedad al costo de un único parámetro adicional por onda, conservando la interpretabilidad del resto.
+
+\subsection{El volumen de datos como limitante del diagnóstico asistido}
+
+El desempeño de los modelos de clasificación automática de arritmias depende críticamente de la cantidad, la diversidad y la calidad de los datos anotados disponibles. Conviene precisar por qué este constituye un problema real y no un supuesto.
+
+La MIT-BIH Arrhythmia Database \cite{moody2001impact} fue el primer conjunto estándar de acceso público y sigue siendo el referente de facto: reúne aproximadamente 110.000 anotaciones verificadas sobre 109.000 complejos QRS y ha sido empleada en cerca de 500 centros de investigación desde 1980. Su propia historia ilustra el costo del etiquetado: la anotación fue manual y verificada por cardiólogos, y 33 latidos distribuidos en 6 registros quedaron sin clasificar por desacuerdo entre especialistas. La etiqueta clínica no es un dato disponible sin costo, ni está exenta de ambigüedad.
+
+A esta escasez se suma el desbalance de clases. Una base construida a partir de registros Holter refleja la prevalencia natural de cada condición, de modo que las patologías infrecuentes quedan representadas por un número reducido de ejemplos, precisamente aquellas cuya detección automática tendría mayor valor clínico.
+
+La relevancia de este problema se aprecia en la epidemiología. Fox et al. \cite{fox2001coronary} determinaron que la enfermedad arterial coronaria fue la etiología del 52\% de los casos incidentes de insuficiencia cardíaca en población general, y que el 25\% de esos casos no había sido reconocido como coronario antes de la angiografía. El margen de mejora diagnóstica es sustantivo, y depende de herramientas entrenadas sobre datos suficientes.
+
+Finalmente, la diversidad demográfica constituye una dimensión adicional del mismo problema. Rijnbeek et al. \cite{rijnbeek2001normal} establecieron que los parámetros del ECG pediátrico difieren radicalmente de los del adulto, y las guías de la AHA \cite{rautaharju2009aha} documentan diferencias sexuales sistemáticas en la repolarización ventricular. Un modelo entrenado sobre una población estrecha hereda ese sesgo. La generación sintética parametrizada permite, en principio, poblar deliberadamente las regiones del espacio demográfico que los datos reales cubren de forma insuficiente.
+
+\subsection{Enfoques supervisados y no supervisados en la generación de señales}
+
+La discusión sobre generación sintética de ECG suele plantearse en términos de aprendizaje supervisado frente a no supervisado, distinción que conviene precisar para situar correctamente la propuesta de esta investigación.
+
+El aprendizaje \textbf{supervisado} requiere pares de entrada y etiqueta. La clasificación automática de arritmias pertenece a esta categoría y constituye la tarea que esta investigación busca beneficiar, no la que implementa. Su limitación es justamente la dependencia de datos etiquetados descrita en la sección anterior.
+
+Los enfoques \textbf{no supervisados}, y en particular las redes generativas antagónicas, aprenden la distribución de los datos sin requerir etiquetas. De la Torre \cite{delatorre2023gan} sistematiza sus fundamentos y documenta sus modos de falla característicos: el colapso de modo, en el que el generador reproduce un subconjunto reducido del espacio de salida; el desvanecimiento de gradientes cuando el discriminador se optimiza con excesiva rapidez; y la inestabilidad del entrenamiento.
+
+Revisiones sistemáticas centradas en el dominio biomédico \cite{brophy2023generative, wulan2020generating} añaden dos objeciones específicas para el uso clínico. La primera es la aparición de artefactos sin correlato fisiológico. La segunda, más determinante, es la ausencia de control paramétrico: no es posible solicitar a una red generativa estándar una elevación del segmento ST de una magnitud especificada, porque su espacio latente no está alineado con variables clínicas.
+
+Existe además una dificultad frecuentemente omitida: un modelo generativo entrenado sin supervisión produce muestras igualmente carentes de etiqueta. Si el propósito es aumentar un conjunto de entrenamiento supervisado, el problema de la anotación reaparece sobre los datos sintéticos.
+
+El enfoque adoptado en esta investigación no pertenece a ninguna de las dos categorías anteriores. El generador paramétrico es un modelo directo y determinista cuyos parámetros se estiman mediante optimización numérica sobre latidos reales empleados como semilla, procedimiento de ajuste de curvas y no de aprendizaje estadístico. Su propiedad distintiva es que la etiqueta se conoce por construcción: los parámetros que generan la señal constituyen ellos mismos su descripción morfológica completa.
+
+La convergencia entre ambos mundos está documentada. Golany et al. \cite{golany2020simgans} proponen SimGANs, arquitectura que incorpora un simulador fisiológico basado en ecuaciones diferenciales dentro del entrenamiento adversario, y reportan mejoras en la clasificación de latidos frente a métodos previos. Que el estado del arte en generación profunda incorpore explícitamente simuladores fisiológicos refuerza la pertinencia de disponer de generadores paramétricos bien calibrados.
+
+\subsection{Métricas de validación de señales sintéticas}
+
+La evaluación de una señal sintética exige métricas que capturen dimensiones distintas del parecido, dado que ninguna las resume por sí sola.
+
+La \textbf{correlación de Pearson} cuantifica la concordancia de forma entre dos series. Su propiedad más relevante, y también la más fácil de pasar por alto al interpretarla, es la invarianza ante transformaciones afines: una señal desplazada o escalada respecto de la original conserva correlación unitaria. En consecuencia, un valor elevado acredita fidelidad morfológica pero no fidelidad de amplitud.
+
+El \textbf{error cuadrático medio} y su raíz cuantifican la discrepancia punto a punto y sí penalizan desplazamientos y cambios de escala. Complementan a la correlación precisamente en aquello que esta no mide. Reportar ambas es necesario; reportar solo una induce a error.
+
+El \textbf{análisis en el dominio de la frecuencia} evalúa si la señal sintética reproduce el contenido espectral del original. En el contexto electrocardiográfico, la variabilidad de la frecuencia cardíaca constituye el objeto de análisis espectral por excelencia. Shaffer y Ginsberg \cite{shaffer2017overview} sistematizan sus métricas y valores normativos, advirtiendo que las medidas obtenidas en ventanas de distinta duración no son intercambiables. Sundas et al. \cite{sundas2025hrv} documentan, en una revisión de alcance de cinco décadas, la ausencia persistente de protocolos estandarizados de medición, lo que obliga a explicitar el procedimiento empleado en cada estudio.
 
 \end{spacing}
 

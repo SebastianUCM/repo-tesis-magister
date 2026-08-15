@@ -1,30 +1,59 @@
 \section{Conclusiones y trabajos futuros}
 \begin{spacing}{1.5}
+
 \subsection{Conclusiones}
-\label{sec:conclusions}
+\label{sec:conclusiones}
 
-Conclusiones obtenidas del trabajo.
+A partir de los resultados obtenidos se extraen las siguientes conclusiones, organizadas según el grado de cumplimiento de los objetivos específicos planteados.
 
-\subsection{Trabajos futuros}
-Como trabajos futuros se espera profundizar en el tema, lo que conlleva a:
-
-\begin{enumerate}
-    \item ...
-    \item ...
-    \item ...
-\end{enumerate}
-
-
-\subsection{Productividad científica de la tesis}
-
-El trabajo llevado a cabo en la presente tesis, ha servido para la elaboración de los siguientes artículos científicos:
+\subsubsection{Sobre los objetivos alcanzados}
 
 \begin{itemize}
-    \item paper1
-    
-    \item paper2
+    \item \textbf{Viabilidad del modelado paramétrico (objetivo 1).} La superposición de cinco funciones Gaussianas asimétricas reproduce la morfología del ciclo P-QRS-T en ritmo sinusal normal con una correlación de Pearson media de 0,9647 sobre 2.238 latidos. La desviación estándar de 0,0108 indica que el desempeño es estable a lo largo del registro y no depende de latidos favorables aislados.
 
+    \item \textbf{Eficacia de la optimización con restricciones (objetivo 2).} El algoritmo L-BFGS-B \cite{byrd1995limited} con restricciones de caja permitió ajustar los veinte parámetros del modelo a cada latido individual sin generar morfologías biológicamente imposibles. No obstante, el análisis del residuo reveló que las restricciones fijadas resultaron excesivamente estrechas para la amplitud de la onda R: el 99,8\% de los latidos convergió exactamente sobre la cota superior, lo que indica que dicho parámetro no llegó a ajustarse.
+
+    \item \textbf{Interpretabilidad frente a los modelos generativos profundos.} Cada parámetro del modelo posee un significado fisiológico directo, propiedad de la que carecen las arquitecturas basadas en redes generativas antagónicas \cite{brophy2023generative}. Esta característica es una ventaja estructural del enfoque, si bien su valor práctico para la aumentación de datos requiere validación adicional.
 \end{itemize}
 
+\subsubsection{Sobre los objetivos no alcanzados}
+
+La honestidad metodológica exige declarar que tres de los cinco objetivos específicos no fueron completados en esta etapa:
+
+\begin{itemize}
+    \item El motor de reglas fisiológicas basado en las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha} (objetivo 3) no fue implementado. En consecuencia, el generador no produce, por ahora, variabilidad demográfica por edad ni por sexo.
+
+    \item El modelado de alteraciones patológicas (objetivo 4), específicamente la elevación del segmento ST y la Fibrilación Auricular, tampoco fue abordado.
+
+    \item La validación (objetivo 5) se completó parcialmente: se calcularon la correlación de Pearson y el RMSE, pero no se realizó el análisis en el dominio de la frecuencia comprometido en la propuesta.
+\end{itemize}
+
+\subsubsection{Sobre la hipótesis}
+
+La hipótesis planteada sostenía que es posible construir un generador de señales ECG sintéticas basado en Gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo además la parametrización controlada por edad, sexo y condición patológica.
+
+La evidencia obtenida valida la primera parte de la hipótesis y deja la segunda sin verificar. La reproducción morfológica quedó demostrada para ritmo sinusal normal en población adulta. La parametrización demográfica y patológica no fue puesta a prueba, por lo que no puede afirmarse ni refutarse con los datos disponibles.
+
+Corresponde asimismo matizar la expresión ``alta fidelidad''. Una correlación de 0,9647 acompañada de un RMSE de 0,3985 describe una reconstrucción morfológicamente correcta pero con una discrepancia de amplitud apreciable. La correlación de Pearson es invariante ante transformaciones afines y, por sí sola, sobreestima el desempeño del generador.
+
+\subsection{Trabajos Futuros}
+
+Las líneas de trabajo inmediatas se desprenden directamente de las limitaciones identificadas en la sección de resultados:
+
+\begin{enumerate}
+    \item \textbf{Recalibrar las restricciones de amplitud.} Elevar o redefinir la cota superior del parámetro de amplitud de la onda R, actualmente saturada en el 99,8\% de los casos, y verificar el efecto sobre el RMSE.
+
+    \item \textbf{Incorporar un término de línea base.} Añadir un desplazamiento constante o una tendencia lineal al modelo, de modo que pueda seguir el desnivel del segmento ST. El sesgo medio medido fue de $-0,1457$ unidades normalizadas, cuya corrección reduciría el RMSE de 0,3985 a 0,3696.
+
+    \item \textbf{Extender la validación al conjunto de la base.} Los resultados presentados corresponden a un único registro de los 48 que componen MIT-BIH. La generalización del método exige repetir el procedimiento sobre el conjunto completo y reportar la variabilidad entre registros.
+
+    \item \textbf{Implementar el motor de reglas demográficas.} Integrar las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha} para modular los intervalos PR, QRS y QT según edad y sexo, y validar las señales resultantes contra rangos de referencia clínicos.
+
+    \item \textbf{Modelar alteraciones patológicas.} Incorporar la elevación del segmento ST mediante funciones de lesión y la Fibrilación Auricular mediante estocasticidad del intervalo R-R con anulación de la onda P.
+
+    \item \textbf{Completar la validación en el dominio de la frecuencia.} Contrastar los espectros de potencia de las señales sintéticas y reales, según lo comprometido en el quinto objetivo específico.
+
+    \item \textbf{Validar la utilidad para aumentación de datos.} La justificación última de este trabajo es mejorar el entrenamiento de clasificadores de arritmias. Corresponde entrenar un clasificador con datos reales, repetir el entrenamiento incorporando las señales sintéticas y medir la diferencia de desempeño. Sin este experimento, la utilidad práctica del generador permanece como hipótesis.
+\end{enumerate}
 
 \end{spacing}

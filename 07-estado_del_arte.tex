@@ -2,60 +2,48 @@
 \label{sec:mapeo}
 \begin{spacing}{1.5}
 
-La organización de esta sección depende de cómo se llevó a cabo el estado del arte. Ejemplo con mapeo sistemático. 
+La literatura actual en procesamiento de señales biomédicas e inteligencia artificial aborda la generación de ECGs sintéticos desde dos paradigmas principales: el modelado matemático-fenomenológico y los modelos generativos profundos (Deep Generative Models).
 
+A continuación, se analiza la evolución de estos enfoques y la brecha que esta tesis pretende cubrir.
 
-En las siguientes secciones se describen los pasos necesarios para realizar el mapeo sistemático de los trabajos relacionados a esta investigación.
+\subsection{Modelado Fenomenológico y Dinámico del ECG}
 
-\subsection{Ámbito de revisión}
-...
+El estándar de oro histórico para la simulación de señales ECG se basa en la descomposición de la morfología P-QRS-T mediante funciones matemáticas explícitas.
 
-\subsection{Preguntas de investigación}
+McSharry et al. \cite{mcsharry2003dynamical} revolucionaron el campo al proponer un modelo dinámico basado en un sistema de tres ecuaciones diferenciales ordinarias acopladas. Su modelo reproduce la trayectoria del vector cardíaco en un ciclo límite 3D, permitiendo generar señales realistas con variabilidad de frecuencia cardíaca (HRV) y arritmias básicas. Este trabajo es la base fundamental de la mayoría de los simuladores modernos.
 
-Se plantean las siguientes preguntas de investigación:
-\begin{enumerate}
-    \item Pregunta1
-    \item Pregunta2
-    \item Pregunta3
+Clifford et al. \cite{clifford2004model} perfeccionaron este enfoque utilizando una suma lineal de funciones Gaussianas para ajustar morfologías específicas. Demostraron que la descomposición Gaussiana es computacionalmente eficiente y permite una parametrización precisa de la asimetría de las ondas, lo cual es superior para simular patologías isquémicas donde la morfología del segmento ST es crítica.
 
-\end{enumerate}
+\subsection{Limitaciones de la IA Generativa (GANs) frente al Control Fisiológico}
 
-\subsection{Palabras claves y ejecución de la búsqueda}
+En la última década (2015-2025), el uso de Redes Generativas Antagónicas (GANs) ha dominado la investigación. Aunque las GANs pueden generar señales visualmente indistinguibles de las reales, recientes revisiones sistemáticas señalan riesgos críticos para su uso clínico.
 
-...
+Brophy et al. \cite{brophy2023generative} y Wulan et al. \cite{wulan2020generating} advierten en sus revisiones que, si bien las GANs son potentes, sufren de alucinaciones y carecen de control paramétrico, es decir, no se puede pedir a una GAN estándar que genere un infarto con elevación del ST de exactamente 0.2mV. Esta falta de explicabilidad y control hace que los modelos paramétricos sigan siendo efectivos para la validación de software médico que requiere reglas estrictas.
 
-\subsection{Criterios de exclusión e inclusión}
+\subsection{Variabilidad}
 
-...
+Una constante en los simuladores actuales es que asumen un paciente estándar, ignorando las variaciones biológicas fundamentales.
 
-\subsection{Esquemas de clasificación}
+Rijnbeek et al. \cite{rijnbeek2001normal} establecieron en un estudio seminal que los parámetros del ECG pediátrico son radicalmente distintos a los del adulto. Simular un neonato usando parámetros de adulto simplemente escalados en el tiempo es un error metodológico grave que esta tesis corrige utilizando sus tablas de referencia.
 
- ...
+Rautaharju et al. \cite{rautaharju2009aha}, en las guías de la AHA/ACCF, definieron oficialmente las diferencias sexuales en la repolarización ventricular, indicando que el intervalo QTc es fisiológicamente mayor en mujeres. La incorporación de estas reglas en un generador sintético es una innovación necesaria para evitar sesgos de género en el entrenamiento de algoritmos de IA.
 
-\subsection{otro1}
+%marco rederencial: teorico
+% ¿ Que se sabe sobre el tema?
+% ¿ Que no se sabe
+% ¿ Donde se estudió quien lo estudio
+% ¿ Quese dijo al respecto
+% ¿ Que hace falta estudiar
+% ¿ Cual es la pertinencia de estudiarlo
+% marco referencial: empirico
+% describir los resultados en
+% diferentes escalas:
+% escala internacional
+% escala latinoamericana
+% escala nacional
+% reflexionar o tensionar sobre la evicencia encintrada
+% integrar la informacion en una conclusion
 
-\subsection{otro2}
-
-
- \subsection{Respuesta de las preguntas}
- En base a los análisis anteriores se obtienen las siguientes respuestas a las preguntas de investigación:
- 
- \begin{enumerate}
-    \item Pregunta1
-    \\
-    R: 
-    
-    \item Pregunta2
-    \\
-    R: 
-    
-    \item Pregunta3
-    \\
-    R:
-\end{enumerate}
-
-\subsection{Trabajos relacionados}\label{subsec:tr}
-
-Ahondar en referencias que tienen que ver de forma directa con lo propuesto. Ejemplo cita \cite{bar2008h}
+Mientras que McSharry provee la dinámica y las GANs proveen el realismo visual, existe una carencia de herramientas que combinen la flexibilidad matemática de las Gaussianas con las diferenciaciones de sexo y edad estrictas de la clínica (Rijnbeek/AHA). Esta tesis busca llenar ese vacío mediante un generador híbrido parametrizable, cuya primera etapa ---la validación morfológica del núcleo gaussiano--- es la que se presenta y valida en este documento.
 
 \end{spacing} 

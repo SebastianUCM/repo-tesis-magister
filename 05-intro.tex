@@ -4,53 +4,78 @@
 \begin{spacing}{1.5}
 \addcontentsline{toc}{section}{Introducción}
 \markright{\MakeUppercase{Introducción}}
-Foco de la investigación/tesis. Breve descripción del contenido.
+
+El avance exponencial de la Inteligencia Artificial (IA) en el sector salud ha inaugurado nuevas posibilidades para el diagnóstico asistido por computadora, prometiendo una detección más temprana y precisa de enfermedades cardiovasculares. Sin embargo, el desarrollo de modelos de IA robustos y fiables enfrenta un desafío estructural crítico: la dependencia de grandes volúmenes de datos de entrenamiento de alta calidad, diversos y correctamente etiquetados.
 
 \subsection{Planteamiento del problema}
 
-Cual es el problema que aborda la tesis \cite{navarro2020gpu}.
+En el ámbito clínico, la conformación de estos conjuntos de datos es intrínsecamente compleja. Existen barreras significativas relacionadas con las estrictas normativas de privacidad del paciente, los elevados costos asociados al etiquetado manual por especialistas y, notablemente, la escasez y desbalance de clases. Este último punto es crítico: es difícil obtener registros suficientes de patologías raras o de grupos demográficos específicos, como neonatos o adultos mayores, lo que limita severamente la capacidad de generalización y la equidad de los sistemas de diagnóstico automático actuales.
 
+Frente a esta problemática, esta investigación presenta el desarrollo de un modelo computacional generativo basado en la superposición de funciones Gaussianas asimétricas. Esta metodología se propone como una solución controlada y eficiente para la creación de señales sintéticas de electrocardiograma (ECG), permitiendo la aumentación de datos (data augmentation) con estricto apego a la morfología fisiológica y a las variaciones clínicas esperadas.
 
-\subsection{Hipótesis}	
+Para el desarrollo de esta investigación, se definen los siguientes conceptos rectores:
 
-Hipótesis aquí.
+\textbf{Generación de Datos Sintéticos:} Proceso computacional mediante el cual se crean datos artificiales que imitan las propiedades estadísticas y estructurales de los datos reales. Su objetivo principal es enriquecer los conjuntos de entrenamiento, permitiendo que los algoritmos de aprendizaje automático aprendan patrones complejos sin comprometer la privacidad de pacientes reales ni depender exclusivamente de la recolección física de datos.
+
+\textbf{Modelado Fenomenológico Paramétrico:} Enfoque matemático que describe la morfología de una señal biológica mediante la suma de funciones matemáticas predefinidas, priorizando la reproducción de la forma de la onda sobre la simulación de los procesos celulares subyacentes. En este estudio, se utiliza una combinación lineal de funciones Gaussianas para representar las ondas P, Q, R, S y T. Cada componente es controlada por parámetros optimizables de amplitud, posición temporal y ancho, lo que otorga una flexibilidad total para simular tanto la fisiología normal como variaciones patológicas específicas.
+
+La relevancia de esta investigación radica en la urgencia de validar métodos alternativos y eficientes para la obtención de datos médicos para investigación. La capacidad de generar señales sintéticas de alta fidelidad, bajo demanda y a bajo costo, tiene el potencial de acelerar drásticamente el entrenamiento y validación de nuevas herramientas diagnósticas.
+
+La pertinencia de utilizar un enfoque paramétrico basado en Gaussianas se fundamenta en la garantía de interpretabilidad y control fisiológico. Al construir la señal mediante parámetros matemáticos explícitos, el enfoque está diseñado para que los datos sintéticos no solo sean visualmente realistas, sino que respeten las reglas demográficas y clínicas establecidas (como la dependencia del intervalo QT respecto al sexo, o el ancho del complejo QRS respecto a la edad). Esto evita la generación de artefactos biológicamente imposibles, un requisito crucial para entrenar sistemas de IA que deban ser seguros, explicables y efectivos en un contexto clínico real.
+
+\subsection{Hipótesis}
+
+Es posible construir un generador de señales ECG sintéticas basado en la superposición de funciones Gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo la parametrización controlada de variables distinguiendo edad, sexo y patológicas (IAM, FA) sin los artefactos comunes en los modelos de aprendizaje profundo generativo.
 
 \subsection{Objetivos}
 
 \subsubsection{Objetivo general}
-%objetivo y sub objetivo con verbo en infinitivo.
 
-Objetivo general aquí.
+Diseñar un simulador computacional de señales de electro cardiograma basado en modelos matemáticos paramétricos, capaz de generar bases de datos sintéticas etiquetadas de diversas poblaciones y condiciones cardíacas.
 
 \subsubsection{Objetivos específicos}
 
-En orden de lograr el objetivo general, se plantean los siguientes objetivos específicos:
+\begin{enumerate}
 
-\begin{itemize}
+\item Implementar el modelo matemático de suma de Gaussianas asimétricas para la representación morfológica del ciclo cardíaco P-QRS-T.
 
-\item	objetivo especifico 1.
+\item Calibrar los parámetros del modelo mediante algoritmos de optimización (L-BFGS-B \cite{byrd1995limited} con restricciones de límites) utilizando latidos reales de la base de datos MIT-BIH Arrhythmia Database como ``semilla''.
 
-\item	objetivo especifico 2.
+\item Desarrollar un motor de reglas fisiológicas que adapte los parámetros de tiempo y voltaje según tablas de referencia clínica (Rijnbeek \cite{rijnbeek2001normal} y AHA \cite{rautaharju2009aha}) para simular pacientes pediátricos, adultos y geriátricos.
 
-\item	objetivo especifico 3.
+\item Modelar matemáticamente alteraciones patológicas, específicamente la elevación del segmento ST (mediante inyección de funciones de lesión) y la Fibrilación Auricular (mediante estocasticidad del intervalo R-R y anulación de onda P).
 
-\item	objetivo especifico 4.
+\item Validar la fidelidad de las señales generadas comparándolas con registros reales mediante métricas de correlación de Pearson, Error Cuadrático Medio (RMSE) y análisis en el dominio de la frecuencia.
 
-\item	objetivo especifico 5.
+\end{enumerate}
 
-\end{itemize}
+\subsection{Estructura del Trabajo}
 
-\subsubsection{Estructura del Trabajo}
+El documento se organiza de la siguiente manera:
 
-Este trabajo, esta compuesto por las siguientes secciones:
-\begin{itemize}
-    \item En la sección 1, Marco Teórico, ...
-	\item En la sección 2, Estado del Arte, ...
-	\item En la sección 3, Métodos propuestos, ...
-	\item En la sección 4, Resultados experimentales y discusión, ...
-	\item Finalmente, en la sección 5, se presentan las conclusiones, trabajos futuros y productividad de la tesis.
-\end{itemize}	
+El Marco Teórico expone los fundamentos de la electrofisiología cardíaca y del modelado matemático de señales biomédicas necesarios para seguir el desarrollo posterior.
+
+El Estado del Arte explora los antecedentes académicos en la generación de datos sintéticos biomédicos, contrastando los enfoques de modelado dinámico frente a los enfoques puramente estadísticos.
+
+Los Métodos Propuestos describen el enfoque técnico implementado, detallando el diseño del modelo matemático de Gaussianas, el proceso de optimización numérica con datos reales (MIT-BIH) y la integración de reglas demográficas.
+
+Los Resultados Experimentales y Discusión presentan la validación estadística de las señales generadas sobre el registro 100 de la base MIT-BIH, el análisis del error residual y el contraste entre los objetivos proyectados y los efectivamente alcanzados.
+
+Finalmente, las Conclusiones evalúan el cumplimiento de cada objetivo específico y delimitan las líneas de trabajo futuro. En los Anexos se incluye el cronograma original de la propuesta.
 
 
+\subsection{Alcance y delimitación del problema}
+
+Atendiendo a la observación de la comisión relativa a la necesidad de acotar la problemática en función de las señales efectivamente abordadas, se delimita el alcance de esta investigación en los siguientes términos.
+
+\textbf{Señales objeto de estudio.} El trabajo aborda la generación de latidos de electrocardiograma de superficie correspondientes a ritmo sinusal normal, en registros de una derivación. Se emplea el canal MLII de la MIT-BIH Arrhythmia Database \cite{moody2001impact}, y se procesan exclusivamente los latidos anotados como normales, descartando latidos ectópicos y segmentos con artefactos.
+
+\textbf{Unidad de generación.} La unidad modelada es el latido individual, segmentado en una ventana centrada en el pico R. La generación de trazados continuos de larga duración, que exigiría modelar además la secuencia de intervalos R-R y su variabilidad, no forma parte del alcance de esta etapa.
+
+\textbf{Dimensión morfológica.} El modelo reproduce la morfología del ciclo P-QRS-T en amplitud y posición temporal. No aborda el ruido de línea base, la interferencia de red ni los artefactos de movimiento, que constituyen problemas de simulación distintos e independientes del modelado morfológico.
+
+\textbf{Exclusiones explícitas.} Quedan fuera del alcance de esta etapa la generación multiderivación, el modelado de arritmias distintas del ritmo sinusal normal, y la simulación de morfologías patológicas. Estas extensiones se plantean como trabajo futuro y no como resultados comprometidos.
+
+Esta delimitación busca alinear el problema declarado con los objetivos específicos verificables, evitando que el alcance enunciado exceda a aquello que la validación experimental puede sustentar.
 
 \end{spacing} 

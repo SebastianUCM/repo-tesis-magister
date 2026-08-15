@@ -2,6 +2,10 @@
 \section*{Resumen}
 \begin{spacing}{1.4}
 
-Resumen de la tesis en español. Incluir resultados y conclusiones más relevantes.
+El desarrollo de sistemas de diagnóstico asistido por computadora mediante Inteligencia Artificial (IA) enfrenta un desafío crítico en cardiología: la escasez de datos etiquetados de alta calidad y el desbalance de clases en patologías raras. Esta investigación propone el desarrollo de un generador paramétrico de señales electrocardiográficas (ECG) sintéticas basado en la superposición de funciones Gaussianas asimétricas. A diferencia de los modelos de aprendizaje profundo (como las GANs), que carecen de control fisiológico y sufren de alucinaciones, este enfoque permite una parametrización explícita de la morfología P-QRS-T.
+
+Mediante algoritmos de optimización numérica (L-BFGS-B) y utilizando registros de la base de datos MIT-BIH como semilla, el modelo calibra amplitudes y posiciones temporales para reproducir la morfología de señales reales. La validación se realizó sobre 2.238 latidos sinusales normales del registro 100 de dicha base, obteniendo una correlación de Pearson media de 0,9647 (desviación estándar 0,0108) y un RMSE medio de 0,3985 (desviación estándar 0,0287) en unidades de señal normalizada. El análisis del residuo permitió identificar dos limitaciones concretas del modelo: la saturación del límite superior de amplitud de la onda R y la ausencia de un término de línea base.
+
+Los resultados obtenidos confirman la viabilidad del enfoque paramétrico para reproducir la morfología del ciclo P-QRS-T en ritmo sinusal normal. La incorporación de un motor de reglas basado en estándares clínicos (Rijnbeek/AHA) para simular variabilidad demográfica y patologías específicas se plantea como la extensión inmediata del trabajo, y no forma parte del alcance validado en esta etapa.
 
 \end{spacing}

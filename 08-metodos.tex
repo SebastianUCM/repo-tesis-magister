@@ -1,28 +1,119 @@
 
 \section{Métodos propuestos}\label{sec:mp}
 \begin{spacing}{1.5}
-...
 
-\subsection{ ...}
+La presente investigación adopta un enfoque cuantitativo y experimental para el desarrollo de un generador paramétrico. El proceso se divide en la selección de recursos, el diseño del modelo matemático y el algoritmo de ajuste.
 
-Ejemplo referencia a otra sub sección \ref{subsec:tr}
+\subsection{Recursos Computacionales y Software}
+
+Para garantizar la reproducibilidad y eficiencia del generador se utilizaron los siguientes recursos:
+
+\begin{itemize}
+    \item \textbf{Lenguaje de Programación:} Python 3.12, debido a su robustez en el procesamiento de señales y optimización numérica.
+
+    \item \textbf{Librerías Núcleo:} NumPy y SciPy \cite{virtanen2020scipy}: Para el manejo de arreglos vectoriales y la implementación de algoritmos de optimización.
+
+    \begin{itemize}
+        \item WFDB (Waveform Database): Para la lectura y preprocesamiento de los registros de la base de datos MIT-BIH Arrhythmia Database \cite{moody2001impact}.
+        \item Matplotlib / Seaborn: Para la visualización y comparación de señales sintéticas frente a reales.
+    \end{itemize}
+
+    \item \textbf{Hardware}: Estación de trabajo con procesador multi-núcleo y un mínimo de 8 GB de RAM, suficiente para la ejecución de modelos paramétricos gaussianos.
+\end{itemize}
+
+\subsection{Diseño del Modelo de Generación}
+
+El núcleo del generador se basa en el Modelado Fenomenológico Paramétrico, que describe la señal ECG como una combinación lineal de funciones matemáticas.
+
+\subsubsection{Modelo de Gaussianas Asimétricas}
+
+Cada ciclo cardíaco (latido) se modela mediante la superposición de cinco funciones Gaussianas, correspondientes a las ondas P, Q, R, S y T. La señal sintética $x(t)$ se define mediante la ecuación:
+
+\begin{equation}
+    x(t) = \sum_{i \in \{P,Q,R,S,T\}} a_i \cdot \exp \left( -\frac{(t - b_i)^2}{2c_i^2} \right)
+\end{equation}
+
+Donde cada componente es controlada por parámetros explícitos de amplitud ($a_i$), posición temporal ($b_i$) y ancho o desviación estándar ($c_i$). Para capturar la asimetría real de ondas como la T, se implementa un parámetro de modulación que permite anchos diferenciados para la fase ascendente y descendente de la curva.
+
+\subsection{Proceso de Optimización Numérica}
+
+Para que las señales sean realistas, los parámetros del modelo se ajustan automáticamente a señales reales utilizando técnicas de optimización. El flujo de trabajo consiste en:
+
+\begin{enumerate}
+    \item \textbf{Extracción de Semillas:} Selección de latidos representativos de la base MIT-BIH.
+    \item \textbf{Función Objetivo:} Minimización del Error Cuadrático Medio (RMSE) entre la señal real ($y$) y la sintética generada ($x$).
+    \item \textbf{Algoritmo:} Se utiliza el método \textbf{L-BFGS-B} \cite{byrd1995limited}, permitiendo establecer límites fisiológicos estrictos a los parámetros para evitar artefactos biológicamente imposibles.
+\end{enumerate}
+
+\subsection{Motor de Reglas Fisiológicas y Variabilidad}
+
+El diseño contempla, para la etapa siguiente del plan de trabajo, un motor de reglas basado en estándares clínicos para crear poblaciones diversas:
+
+\begin{itemize}
+    \item \textbf{Variabilidad Demográfica:} Ajuste automático de los intervalos (PR, QRS, QT) según la edad y el sexo siguiendo las tablas de Rijnbeek \cite{rijnbeek2001normal} y la AHA \cite{rautaharju2009aha}.
+    \item \textbf{Simulación de Patologías:} Modelado matemático de alteraciones como la elevación del segmento ST (infartos) mediante funciones de lesión y la Fibrilación Auricular mediante estocasticidad en el intervalo R-R.
+\end{itemize}
 
 
-\subsubsection{Ejemplo sub sub sección}\label{subsubsec:...}
+\subsection{Metodología de validación de los datos generados}
 
-Ejemplo Tabla \ref{tab1}
+Esta sección responde a la observación de la comisión relativa a la necesidad de definir explícitamente la metodología de aplicación de las métricas de validación. Se especifican la unidad de análisis, el procedimiento de comparación, las métricas empleadas con su justificación, y los criterios de aceptación.
 
-\begin{table}[H]
-\caption{Nombre tabla.}
-\centering
-\begin{tabular}{|l|l|l|l|l|}
-\hline
-\textbf{Nombre1} & \textbf{Nombre2} & \textbf{Nombre3} & \textbf{Nombre4} & \textbf{Fórmula}                          \\ \hline
-Texto1                                                      & 8                                      & 1                                  & 10                                & $23 \cdot 2^{n}$, con  $0 \leq n \leq 5$              \\ \hline
-Texto2                                                            & 4                                      & 3                                  & 2                              & $3^{n}$, con $5 \leq n \leq 10$                       \\ \hline
-\begin{tabular}[c]{@{}l@{}}Texto\\  separado\end{tabular} & $18\cdot 10^{60}$                       & $3200 \cdot 10^{60}$                     & 4                                & $44\cdot 10^{6} \cdot 2^{n}$, con  $0 \leq n \leq 6$ \\ \hline
-\end{tabular}
-\label{tab1}
-\end{table}
+\subsubsection{Unidad de análisis y procedimiento de comparación}
+
+La unidad de validación es el latido individual. Cada señal sintética se compara exclusivamente con el latido real que sirvió de semilla para su ajuste, de modo que la comparación es pareada y no agregada. Se descarta deliberadamente la comparación contra un latido promedio del registro, dado que el promediado atenúa la variabilidad morfológica que el generador debe reproducir.
+
+El procedimiento consta de cuatro etapas:
+
+\begin{enumerate}
+    \item \textbf{Selección de semillas.} Extracción de los latidos anotados como sinusales normales (símbolo \texttt{N}) del registro, descartando latidos ectópicos, artefactos y marcas de ritmo.
+    \item \textbf{Segmentación y normalización.} Ventana de 128 muestras centrada en el pico R anotado y normalización mediante puntuación Z, de modo que las métricas resulten independientes de la ganancia del canal y comparables entre registros.
+    \item \textbf{Ajuste.} Optimización independiente de los veinte parámetros del modelo para cada latido, minimizando el error cuadrático medio mediante L-BFGS-B \cite{byrd1995limited} con restricciones de caja fisiológicas.
+    \item \textbf{Evaluación.} Cálculo de las métricas sobre el par formado por el latido real y su reconstrucción sintética.
+\end{enumerate}
+
+\subsubsection{Métricas empleadas y justificación de su elección}
+
+Se emplean dos métricas complementarias, cuya combinación responde a que ninguna resulta suficiente por separado.
+
+La \textbf{correlación de Pearson} evalúa la concordancia morfológica entre ambas señales:
+
+\begin{equation}
+r = \frac{\sum_{i=1}^{N}(y_i - \bar{y})(x_i - \bar{x})}{\sqrt{\sum_{i=1}^{N}(y_i - \bar{y})^2}\sqrt{\sum_{i=1}^{N}(x_i - \bar{x})^2}}
+\end{equation}
+
+donde $y$ denota la señal real, $x$ la sintética y $N = 128$ el número de muestras. Se selecciona porque el objetivo primario del generador es reproducir la forma del ciclo P-QRS-T. Su limitación conocida es la invarianza ante transformaciones afines, motivo por el cual no se reporta de forma aislada.
+
+El \textbf{error cuadrático medio y su raíz} cuantifican la discrepancia punto a punto:
+
+\begin{equation}
+\mathrm{MSE} = \frac{1}{N}\sum_{i=1}^{N}(y_i - x_i)^2 \qquad ; \qquad \mathrm{RMSE} = \sqrt{\mathrm{MSE}}
+\end{equation}
+
+Se distingue explícitamente entre ambas magnitudes: el MSE constituye la función objetivo minimizada durante la optimización, mientras que el RMSE es la métrica reportada, por estar expresada en las mismas unidades que la señal normalizada y resultar por ello directamente interpretable. Esta distinción se hace explícita porque ambas denominaciones aparecen empleadas de forma intercambiable en la literatura del área, lo que constituye una fuente frecuente de confusión.
+
+\subsubsection{Estadísticos reportados}
+
+Para cada métrica se reportan media, desviación estándar, mínimo, mediana y máximo sobre el total de latidos procesados. La desviación estándar y el rango son tan relevantes como la media: un valor promedio elevado acompañado de dispersión alta indicaría que el generador funciona bien únicamente sobre un subconjunto de latidos, situación que la media por sí sola ocultaría.
+
+Se reporta asimismo la proporción de latidos que supera umbrales de correlación definidos, de modo que el desempeño pueda evaluarse en términos de cobertura y no solo de tendencia central.
+
+\subsubsection{Criterios de aceptación}
+
+Se establecen los siguientes criterios, definidos con anterioridad a la ejecución de los experimentos:
+
+\begin{itemize}
+    \item Correlación de Pearson media superior a 0,95, con desviación estándar inferior a 0,05.
+    \item Al menos el 90\% de los latidos con correlación individual superior a 0,95.
+    \item Ausencia de latidos con parámetros fuera de los rangos fisiológicos definidos.
+\end{itemize}
+
+\subsubsection{Verificación de saturación de las restricciones}
+
+Como control adicional del procedimiento de optimización se verifica, para cada parámetro, la proporción de latidos cuya solución converge exactamente sobre alguno de los límites de caja impuestos. Una proporción elevada indica que la restricción, y no los datos, está determinando el valor del parámetro, situación que invalida la interpretación fisiológica de dicho parámetro y exige recalibrar el límite correspondiente. Este control forma parte del protocolo de validación y sus resultados se reportan en la sección correspondiente.
+
+\subsubsection{Alcance de la validación}
+
+La validación descrita se aplica a señales de ritmo sinusal normal. La evaluación de señales con variabilidad demográfica parametrizada o con alteraciones patológicas requerirá criterios adicionales, específicamente el contraste de los intervalos generados contra los rangos de referencia clínicos de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha}, y queda fuera del alcance de la presente etapa.
 
 \end{spacing}

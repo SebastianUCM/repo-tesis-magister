@@ -2,27 +2,92 @@
 
 \section{Resultados experimentales y discusión}\label {sec:results}
 
-Las sub secciones dependen de la cada tesis. Las presentes son ejemplos.
+\subsection{Materiales utilizados}
 
-\subsection{Materiales utilizados}\label{sec:mats}
+La validación experimental se realizó sobre la MIT-BIH Arrhythmia Database \cite{moody2001impact}, disponible públicamente a través de PhysioNet. De los 48 registros que componen la base, se utilizó el registro 100, muestreado a 360 Hz sobre dos derivaciones, del cual se procesó el canal MLII.
 
-Detalle de materiales (bases de datos, servidores, recursos, etc)
+La extracción de latidos se apoyó en las anotaciones de referencia del propio registro. De las 2.274 anotaciones disponibles se seleccionaron exclusivamente aquellas etiquetadas como latido sinusal normal (símbolo \texttt{N}), descartando latidos ectópicos, artefactos y marcas de ritmo. Este filtrado produjo un conjunto de 2.238 latidos.
+
+Cada latido se extrajo mediante una ventana de 128 muestras centrada en el pico R anotado, equivalente a aproximadamente 356 ms de señal, y se normalizó mediante puntuación Z, de modo que la comparación entre señal real y sintética fuese independiente de la ganancia del canal.
+
+El desarrollo se implementó en Python 3.12, empleando NumPy y SciPy \cite{virtanen2020scipy} para el cálculo numérico y la optimización, y WFDB para la lectura de los registros.
 
 \subsection{Diseño de los experimentos}
 
-...
+Para cada uno de los 2.238 latidos se ejecutó un ajuste independiente de los veinte parámetros del modelo, correspondientes a la amplitud, posición temporal y anchos ascendente y descendente de las cinco Gaussianas asimétricas asociadas a las ondas P, Q, R, S y T.
 
+La función objetivo minimizada fue el error cuadrático medio (MSE) entre la señal real y la sintética. El ajuste se realizó mediante el algoritmo L-BFGS-B \cite{byrd1995limited}, con restricciones de caja definidas para cada parámetro a partir de rangos fisiológicos, con el propósito de impedir la generación de morfologías biológicamente imposibles.
 
-\subsection{Optimización de parámetros}
+Conviene precisar la nomenclatura, dado que ambas magnitudes aparecen en la literatura del área: la función objetivo optimizada es el error cuadrático medio (MSE), mientras que la métrica reportada en esta sección es su raíz (RMSE), expresada en unidades de desviación estándar de la señal normalizada.
 
-...
+La evaluación de fidelidad se efectuó comparando cada señal sintética con el latido real que le dio origen, mediante dos métricas complementarias: el coeficiente de correlación de Pearson, que cuantifica la concordancia morfológica, y el RMSE, que cuantifica la discrepancia en amplitud punto a punto.
 
+\subsection{Fidelidad morfológica de las señales generadas}
 
-\subsection{Primer experimento}
+El Cuadro \ref{tab:metricas} resume el desempeño del generador sobre los 2.238 latidos procesados.
 
-...
- 
-\subsection{Segundo experimento}
-...
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Estadístico} & \textbf{Correlación de Pearson} & \textbf{RMSE} \\ \hline
+Media & 0,9647 & 0,3985 \\ \hline
+Desviación estándar & 0,0108 & 0,0287 \\ \hline
+Mínimo & 0,8381 & 0,3029 \\ \hline
+Mediana & 0,9659 & 0,3987 \\ \hline
+Máximo & 0,9873 & 0,6668 \\ \hline
+\end{tabular}
+\caption{Métricas de fidelidad sobre 2.238 latidos normales del registro 100 de MIT-BIH.}
+\label{tab:metricas}
+\end{table}
+
+La correlación media alcanzada fue de 0,9647 con una desviación estándar de 0,0108. La dispersión reducida indica que el desempeño es estable a lo largo del registro y no depende de latidos particularmente favorables: el 91,5\% de los latidos superó una correlación de 0,95, y únicamente 2 latidos de 2.238 (0,1\%) quedaron por debajo de 0,90.
+
+La Figura \ref{fig:validacion} presenta la comparación entre un latido real y su reconstrucción sintética para el caso de mejor ajuste.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{fig/validacion_visual.png}
+\caption{Comparación entre un latido real del registro 100 (línea continua) y la señal sintética generada por el modelo paramétrico (línea discontinua).}
+\label{fig:validacion}
+\end{figure}
+
+\subsection{Análisis del error residual}
+
+La lectura conjunta de ambas métricas exige cautela. Una correlación de 0,9647 acompañada de un RMSE de 0,3985 no describe una reconstrucción de alta fidelidad en sentido estricto: indica que el modelo reproduce correctamente la \emph{forma} del ciclo P-QRS-T, pero conserva una discrepancia de amplitud cercana a 0,4 desviaciones estándar de la señal normalizada. La correlación de Pearson es invariante ante transformaciones afines, de modo que un desplazamiento o un cambio de escala sistemáticos no la penalizan, mientras que sí penalizan el RMSE. Reportar únicamente la correlación sobreestimaría el desempeño del generador.
+
+El análisis del residuo permitió identificar dos causas concretas de esta discrepancia.
+
+En primer lugar, se detectó una saturación sistemática en el límite superior del parámetro de amplitud de la onda R. Dicho límite fue fijado en 3,5 unidades normalizadas, pero 2.233 de los 2.238 latidos (99,8\%) convergieron exactamente sobre esa cota. El optimizador no está ajustando este parámetro, sino que lo encuentra restringido: los latidos reales normalizados presentan picos R que superan dicho valor. La restricción de caja, concebida para evitar artefactos, está impidiendo la reconstrucción correcta de la deflexión de mayor amplitud del complejo.
+
+En segundo lugar, se verificó un sesgo sistemático entre ambas señales. La diferencia media entre la señal real y la sintética fue de $-0,1457$ unidades normalizadas, atribuible a que el modelo de cinco Gaussianas carece de un término de línea base y retorna necesariamente a cero fuera de las deflexiones, mientras que la señal real presenta un desnivel en el segmento ST. No obstante, la corrección de este desplazamiento constante reduciría el RMSE medio de 0,3985 a 0,3696, es decir, explica solo el 7,2\% del error total. El sesgo de línea base contribuye, pero no es la causa principal del residuo.
+
+Ambos hallazgos son limitaciones del modelo tal como fue implementado y no de la metodología paramétrica en sí. Su corrección constituye el trabajo inmediato descrito en la sección de trabajos futuros.
+
+\subsection{Alcance efectivo respecto a los resultados proyectados}
+
+Por transparencia metodológica, el Cuadro \ref{tab:alcance} contrasta los resultados proyectados en la propuesta de esta investigación con lo efectivamente alcanzado hasta la fecha.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{7cm}|p{6.5cm}|}
+\hline
+\textbf{Resultado proyectado} & \textbf{Estado actual} \\ \hline
+Framework de generación paramétrica en Python & Implementado y funcional para latidos sinusales normales \\ \hline
+Validación de fidelidad frente a MIT-BIH & Realizada sobre 1 registro de los 48 de la base \\ \hline
+Dataset de al menos 5.000 latidos sintéticos & 2.238 latidos parametrizados \\ \hline
+Variabilidad demográfica pediátrica y geriátrica & No implementada \\ \hline
+Modelado de patologías (elevación del ST, Fibrilación Auricular) & No implementado \\ \hline
+Publicación en revista indexada & Pendiente \\ \hline
+\end{tabular}
+\caption{Contraste entre los resultados proyectados y los alcanzados.}
+\label{tab:alcance}
+\end{table}
+
+El motor de reglas fisiológicas basado en las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha}, así como el modelado de alteraciones patológicas, quedan fuera del alcance validado en esta etapa. En consecuencia, las conclusiones sobre fidelidad que se presentan a continuación son válidas para ritmo sinusal normal en población adulta, y no son extrapolables a otras poblaciones ni a condiciones patológicas sin validación adicional.
+
+\subsection{Resultados de responsabilidad social}
+
+El proyecto pretende democratizar el acceso a datos médicos de alta calidad sin comprometer la privacidad de los pacientes. Al proporcionar un generador robusto, se facilita que investigadores en regiones con pocos recursos clínicos puedan desarrollar y validar sus propios algoritmos de diagnóstico cardiovascular, promoviendo la equidad en las tecnologías de salud asistida.
 
 \end{spacing}

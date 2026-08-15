@@ -1,0 +1,20 @@
+# Normalización de fin de línea.
+# Overleaf y GitHub trabajan con LF. Windows escribe CRLF. Sin esta regla,
+# cada guardado local marca el archivo completo como modificado y el
+# historial se llena de diffs falsos.
+
+* text=auto eol=lf
+
+*.tex   text eol=lf
+*.bib   text eol=lf
+*.cls   text eol=lf
+*.sty   text eol=lf
+*.md    text eol=lf
+
+# Binarios: git no debe tocarlos nunca.
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.eps   binary
