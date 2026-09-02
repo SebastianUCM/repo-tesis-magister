@@ -9,9 +9,11 @@ A partir de los resultados obtenidos se extraen las siguientes conclusiones, org
 \subsubsection{Sobre los objetivos alcanzados}
 
 \begin{itemize}
-    \item \textbf{Viabilidad del modelado paramétrico (objetivo 1).} La superposición de cinco funciones Gaussianas asimétricas reproduce la morfología del ciclo P-QRS-T en ritmo sinusal normal con una correlación de Pearson media de 0,9647 sobre 2.238 latidos. La desviación estándar de 0,0108 indica que el desempeño es estable a lo largo del registro y no depende de latidos favorables aislados.
+    \item \textbf{Viabilidad del modelado paramétrico (objetivo 1).} La superposición de cinco funciones Gaussianas asimétricas, complementada con un término de línea base, reproduce la morfología del ciclo P-QRS-T en ritmo sinusal normal con una correlación de Pearson media de 0,9986 y un RMSE medio de 0,0496 sobre 2.238 latidos. Las desviaciones estándar respectivas, 0,0020 y 0,0162, indican que el desempeño es estable a lo largo del registro y no depende de latidos favorables aislados.
 
-    \item \textbf{Eficacia de la optimización con restricciones (objetivo 2).} El algoritmo L-BFGS-B \cite{byrd1995limited} con restricciones de caja permitió ajustar los veinte parámetros del modelo a cada latido individual sin generar morfologías biológicamente imposibles. No obstante, el análisis del residuo reveló que las restricciones fijadas resultaron excesivamente estrechas para la amplitud de la onda R: el 99,8\% de los latidos convergió exactamente sobre la cota superior, lo que indica que dicho parámetro no llegó a ajustarse.
+    \item \textbf{Eficacia de la optimización con restricciones (objetivo 2).} El algoritmo L-BFGS-B \cite{byrd1995limited} con restricciones de caja permitió ajustar los veintidós parámetros del modelo a cada latido individual sin generar morfologías biológicamente imposibles. El resultado depende, no obstante, de que las restricciones estén expresadas en las mismas unidades que la señal a la que se aplican. La primera implementación derivó sus cotas de amplitud de rangos fisiológicos en milivoltios y las aplicó a latidos normalizados por puntuación Z: el 99,8\% de los latidos convergió exactamente sobre la cota superior de la amplitud de la onda R y, en promedio, 11,8 de los 20 parámetros quedaron determinados por un límite en lugar de por los datos. Expresadas las cotas de amplitud como fracción del pico de cada latido, ese promedio desciende a 1,8 de 22.
+
+    \item \textbf{Valor diagnóstico del residuo frente a la métrica agregada.} La correlación de Pearson de la primera iteración, 0,9647, era compatible con un modelo cuya mayoría de parámetros no estaba siendo ajustada por los datos. Fueron dos indicadores auxiliares —el conteo de parámetros saturados en sus cotas y el sesgo medio del residuo— los que localizaron ambos defectos y guiaron una corrección que redujo el RMSE en un 87,6\%. Reportar métricas agregadas de fidelidad sin instrumentar el residuo habría dejado ese margen sin detectar.
 
     \item \textbf{Interpretabilidad frente a los modelos generativos profundos.} Cada parámetro del modelo posee un significado fisiológico directo, propiedad de la que carecen las arquitecturas basadas en redes generativas antagónicas \cite{brophy2023generative}. Esta característica es una ventaja estructural del enfoque, si bien su valor práctico para la aumentación de datos requiere validación adicional.
 \end{itemize}
@@ -34,16 +36,14 @@ La hipótesis planteada sostenía que es posible construir un generador de seña
 
 La evidencia obtenida valida la primera parte de la hipótesis y deja la segunda sin verificar. La reproducción morfológica quedó demostrada para ritmo sinusal normal en población adulta. La parametrización demográfica y patológica no fue puesta a prueba, por lo que no puede afirmarse ni refutarse con los datos disponibles.
 
-Corresponde asimismo matizar la expresión ``alta fidelidad''. Una correlación de 0,9647 acompañada de un RMSE de 0,3985 describe una reconstrucción morfológicamente correcta pero con una discrepancia de amplitud apreciable. La correlación de Pearson es invariante ante transformaciones afines y, por sí sola, sobreestima el desempeño del generador.
+Corresponde asimismo precisar la expresión ``alta fidelidad''. La primera iteración del modelo alcanzaba una correlación de 0,9647 con un RMSE de 0,3985, combinación que describe una reconstrucción morfológicamente correcta pero con una discrepancia de amplitud apreciable: la correlación de Pearson es invariante ante transformaciones afines y, por sí sola, sobreestima el desempeño del generador. En el modelo corregido ambas métricas son consistentes entre sí —0,9986 y 0,0496— de modo que la expresión resulta defendible, si bien únicamente para ritmo sinusal normal en población adulta.
 
 \subsection{Trabajos Futuros}
 
 Las líneas de trabajo inmediatas se desprenden directamente de las limitaciones identificadas en la sección de resultados:
 
 \begin{enumerate}
-    \item \textbf{Recalibrar las restricciones de amplitud.} Elevar o redefinir la cota superior del parámetro de amplitud de la onda R, actualmente saturada en el 99,8\% de los casos, y verificar el efecto sobre el RMSE.
-
-    \item \textbf{Incorporar un término de línea base.} Añadir un desplazamiento constante o una tendencia lineal al modelo, de modo que pueda seguir el desnivel del segmento ST. El sesgo medio medido fue de $-0,1457$ unidades normalizadas, cuya corrección reduciría el RMSE de 0,3985 a 0,3696.
+    \item \textbf{Redefinir la ventana de extracción.} La ventana de 128 muestras a 360 Hz cubre 356 ms, mientras que un complejo P-QRS-T normal se extiende entre 600 y 800 ms. Las ondas P y T quedan parcialmente fuera del recorte y sus anchos permanecen determinados por sus cotas en cerca de la mitad de los latidos, pese a la corrección de las restricciones. Ampliar la ventana obliga a redefinir la unidad de análisis y a recalcular las métricas reportadas, por lo que constituye una decisión metodológica y no un ajuste de implementación.
 
     \item \textbf{Extender la validación al conjunto de la base.} Los resultados presentados corresponden a un único registro de los 48 que componen MIT-BIH. La generalización del método exige repetir el procedimiento sobre el conjunto completo y reportar la variabilidad entre registros.
 
