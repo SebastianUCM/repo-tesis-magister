@@ -1,15 +1,6 @@
 \section*{Abstract}
 \begin{spacing}{1.4}
 
-The advancement of Artificial Intelligence (AI) in healthcare is limited by the lack of diverse, high-quality, and correctly labeled datasets, especially for rare cardiac conditions. This research presents the development of a parametric synthetic electrocardiogram (ECG) generator based on the superposition of asymmetric Gaussian functions. Unlike deep generative models (e.g., GANs) that lack physiological control, this parametric approach offers explicit interpretability and precise morphological representation of the P-QRS-T cycle.
-
-By employing numerical optimization algorithms (L-BFGS-B) and using the MIT-BIH Arrhythmia Database as a seed, the model calibrates amplitudes, temporal positions and the baseline level to reproduce the morphology of real signals. Validation was carried out on 2,237 normal sinus beats from record 100 of that database, extracted in an asymmetric 750 ms window that contains the complete P-QRS-T complex, yielding a mean Pearson correlation of 0.9969 (standard deviation 0.0015) and a mean RMSE of 0.0779 (standard deviation 0.0148) in normalized signal units, with a residual bias indistinguishable from zero.
-
-This version of the work further incorporates a second dimension, absent from the previous one: the temporal organisation of the beat sequence. A rhythm module is coupled to the morphological model, producing the interbeat interval series by spectral synthesis with its scaling exponent as a declared input parameter. The coupling is selective in time: the QRS complex does not stretch with heart rate, whereas the P and T waves do. Validation of that module does not rely on indistinguishability from a real series, which was the criterion adopted in the state of the art, but on measuring a declared property: over a cohort of fifty synthetic 24-hour subjects, the requested exponent is recovered with a mean absolute error of 0.014, and the bias of the estimator is characterised as a function of record length.
-
-These figures correspond to the second iteration of the model. An initial twenty-parameter implementation reached a correlation of 0.9647 and an RMSE of 0.3985, and analysis of its residual error identified two specific defects: saturation of the upper bound on R-wave amplitude, and the absence of a baseline term. Correcting both reduced the RMSE by 87.6\% and drove the systematic residual bias to zero. Residual diagnosis, rather than the aggregate metric alone, proved to be the instrument that enabled this improvement.
-
-These results confirm the viability of the parametric approach for reproducing P-QRS-T morphology in normal sinus rhythm. The integration of clinical rule engines (Rijnbeek/AHA) to simulate demographic variability and specific pathologies such as ST-segment elevation and Atrial Fibrillation is proposed as the immediate extension of this work, and falls outside the scope validated at this stage.
 
 \vspace{0.5cm}
 
