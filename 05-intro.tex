@@ -23,15 +23,35 @@ La relevancia de esta investigación radica en la urgencia de validar métodos a
 
 La pertinencia de utilizar un enfoque paramétrico basado en Gaussianas se fundamenta en la garantía de interpretabilidad y control fisiológico. Al construir la señal mediante parámetros matemáticos explícitos, el enfoque está diseñado para que los datos sintéticos no solo sean visualmente realistas, sino que respeten las reglas demográficas y clínicas establecidas (como la dependencia del intervalo QT respecto al sexo, o el ancho del complejo QRS respecto a la edad). Esto evita la generación de artefactos biológicamente imposibles, un requisito crucial para entrenar sistemas de IA que deban ser seguros, explicables y efectivos en un contexto clínico real.
 
+\subsection{La dimensión que falta: el tiempo entre latidos}
+
+El modelo descrito hasta aquí responde a una pregunta —qué forma tiene un latido— y guarda silencio sobre otra: cuándo llega el siguiente. Un generador que produce latidos morfológicamente correctos pero los emite a intervalos constantes, o con una variabilidad sin estructura, no produce un electrocardiograma: produce una secuencia de latidos. Y buena parte de la información que distingue un corazón sano de uno enfermo no reside en la forma de cada latido sino en la organización temporal de la serie que forman.
+
+Peng et al.\ \cite{peng1995quantification} mostraron que el latido sano no se regula según el principio clásico de homeostasis, es decir reduciendo la variabilidad hacia un estado de equilibrio, sino que exhibe correlaciones de largo alcance propias de los sistemas dinámicos alejados del equilibrio; y que en insuficiencia cardíaca congestiva severa ese comportamiento correlacionado se degrada. En ese mismo trabajo introdujeron el análisis de fluctuaciones sin tendencia (DFA, por \emph{detrended fluctuation analysis}), que resume la estructura de correlación de una serie no estacionaria en un exponente de escalamiento $\alpha$, y reportaron un cruce entre un exponente de corto alcance y otro de largo alcance.
+
+Ese exponente dejó de ser una curiosidad matemática para convertirse en un descriptor con valores de referencia. Costa et al.\ \cite{costa2017fragmentation}, sobre registros de veinticuatro horas de 109 adultos sanos con edad mediana de 40 años, reportan un exponente de corto alcance $\alpha_1$ de $1{,}17$ (rango intercuartílico $1{,}07$--$1{,}27$), frente a $1{,}02$ ($0{,}81$--$1{,}15$) en pacientes con enfermedad coronaria. Las revisiones de métricas de variabilidad de la frecuencia cardíaca ubican a $\alpha_1$ y $\alpha_2$ entre los índices no lineales de uso corriente, calculan $\alpha_1$ sobre ventanas de menos de once latidos, y advierten que el DFA exige registros de varias horas \cite{shaffer2017overview,sundas2025hrv}.
+
+Conviene enunciar con cuidado qué dice y qué no dice esa evidencia, porque la formulación intuitiva —orden en el enfermo, desorden en el sano— es a la vez sugerente y engañosa. Más variabilidad no es mejor: hay condiciones patológicas que la elevan, y en pacientes post-infarto un aumento de la variabilidad no lineal constituye un factor de riesgo independiente de mortalidad \cite{shaffer2017overview}. Lo que caracteriza a la salud no es un extremo sino un nivel óptimo; en palabras de esa misma revisión, un corazón sano no es un metrónomo, pero tampoco es ruido. La formulación defendible no es una dirección sino una degradación: la pérdida de las propiedades de escalamiento, que según la patología se manifiesta hacia valores más aleatorios o más regulares.
+
+Frente a esa dimensión, los generadores existentes se reparten en dos familias que han permanecido notablemente separadas. Los generadores de forma de onda, cuyo referente es el modelo dinámico de McSharry et al.\ \cite{mcsharry2003dynamical}, reproducen la morfología del ciclo P-QRS-T pero gobiernan el ritmo con un espectro bimodal, construido como la suma de dos distribuciones gaussianas que representan la arritmia sinusal respiratoria y las ondas de Mayer, con la razón entre bandas de baja y alta frecuencia como parámetro de control. Un espectro así decae más rápido que cualquier ley de potencias fuera de sus picos, de modo que la serie generada no tiene estructura de largo alcance; en ese trabajo no aparece mención alguna a exponentes de escalamiento ni a comportamiento fractal.
+
+La segunda familia genera la secuencia de intervalos y nada más. Su hito es el desafío PhysioNet/Computers in Cardiology de 2002 \cite{moody2002challenge}, que pidió a los participantes generar series sintéticas de intervalos R-R de veinticuatro horas y luego distinguirlas de las reales dentro de un conjunto sin etiquetar. El criterio de calidad fue, por lo tanto, la indistinguibilidad. Entre las entradas, McSharry et al.\ \cite{mcsharry2002tachogram} produjeron tacogramas de veinticuatro horas combinando el mismo espectro bimodal para el corto alcance con conmutaciones entre estados fisiológicos discretos —incluidos los estados de sueño—, cada uno con su propia media, varianza y tendencia extraídas de datos reales. Es decir: generar una serie de intervalos de veinticuatro horas es un problema resuelto desde 2002, y por los mismos autores del generador de forma de onda. Lo que ninguno de esos trabajos hace es tratar el exponente de escalamiento como un parámetro de entrada.
+
+Esta segunda versión del trabajo incorpora precisamente esa contribución. Al modelo morfológico se le agrega un módulo de ritmo que produce la serie de intervalos entre latidos por síntesis espectral, de manera que su exponente de escalamiento sea un parámetro que se declara y que después se verifica sobre la serie generada. Morfología y ritmo se acoplan de forma selectiva en el tiempo: el complejo QRS no se estira con la frecuencia cardíaca, porque su duración depende de la velocidad de conducción intraventricular, mientras que las ondas P y T sí lo hacen. Ese acoplamiento selectivo es sencillo en un modelo paramétrico, donde el centro y el ancho de cada onda son parámetros explícitos, y no lo es en un modelo de ecuaciones diferenciales, donde el ciclo completo se estira en bloque.
+
+Una precisión de nomenclatura, porque en esta literatura es fuente permanente de error. El exponente de Hurst $H$ y el exponente $\alpha$ que entrega el DFA están relacionados pero no son intercambiables: para ruido gaussiano fraccional, que es estacionario, se cumple $\alpha = H$ con $\alpha$ entre 0 y 1; para movimiento browniano fraccional, que no lo es, se cumple $\alpha = H + 1$ con $\alpha$ entre 1 y 2 \cite{hardstone2012dfa}. Como los valores sanos de veinticuatro horas rondan $1{,}17$, es decir por encima de la unidad, caen fuera del rango que un generador de ruido gaussiano fraccional puede producir. Por esa razón este trabajo parametriza en $\alpha$ y no en $H$, y declara explícitamente el régimen supuesto cada vez que informa un valor de $H$.
+
 \subsection{Hipótesis}
 
-Es posible construir un generador de señales ECG sintéticas basado en la superposición de funciones Gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo la parametrización controlada de variables distinguiendo edad, sexo y patológicas (IAM, FA) sin los artefactos comunes en los modelos de aprendizaje profundo generativo.
+Es posible construir un generador de señales ECG sintéticas basado en la superposición de funciones Gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo la parametrización controlada de variables distinguiendo entre sujetos sanos y enfermos.
+
+Se añade a esta hipótesis una segunda proposición, que corresponde a la contribución de esta versión del trabajo: es posible además dotar a ese generador de una dinámica latido a latido cuyo exponente de escalamiento sea un parámetro de entrada. Esta segunda proposición es verificable de manera independiente de la primera, y su verificación no descansa en la indistinguibilidad respecto de una serie real sino en la medición de una propiedad declarada.
 
 \subsection{Objetivos}
 
 \subsubsection{Objetivo general}
 
-Diseñar un simulador computacional de señales de electro cardiograma basado en modelos matemáticos paramétricos, capaz de generar bases de datos sintéticas etiquetadas de diversas poblaciones y condiciones cardíacas.
+Diseñar un simulador computacional de señales de electrocardiograma basado en un modelo matemático paramétrico de Gaussianas asimétricas, capaz de generar conjuntos de datos sintéticos etiquetados para un grupo control de sujetos sanos y un grupo de sujetos enfermos.
 
 \subsubsection{Objetivos específicos}
 
@@ -41,11 +61,13 @@ Diseñar un simulador computacional de señales de electro cardiograma basado en
 
 \item Calibrar los parámetros del modelo mediante algoritmos de optimización (L-BFGS-B \cite{byrd1995limited} con restricciones de límites) utilizando latidos reales de la base de datos MIT-BIH Arrhythmia Database como ``semilla''.
 
-\item Desarrollar un motor de reglas fisiológicas que adapte los parámetros de tiempo y voltaje según tablas de referencia clínica (Rijnbeek \cite{rijnbeek2001normal} y AHA \cite{rautaharju2009aha}) para simular pacientes pediátricos, adultos y geriátricos.
+\item Desarrollar un motor de reglas fisiológicas que adapte los parámetros de tiempo y voltaje según tablas de referencia clínica (Rijnbeek \cite{rijnbeek2001normal} y AHA \cite{rautaharju2009aha}) para simular pacientes sanos y enfermos.
 
-\item Modelar matemáticamente alteraciones patológicas, específicamente la elevación del segmento ST (mediante inyección de funciones de lesión) y la Fibrilación Auricular (mediante estocasticidad del intervalo R-R y anulación de onda P).
+\item Incorporar un módulo de ritmo que genere la secuencia de intervalos entre latidos con un exponente de escalamiento declarado como parámetro de entrada, acoplarlo al modelo morfológico de forma selectiva en el tiempo, y verificar la recuperación de ese exponente sobre las series generadas.
 
 \item Validar la fidelidad de las señales generadas comparándolas con registros reales mediante métricas de correlación de Pearson, Error Cuadrático Medio (RMSE) y análisis en el dominio de la frecuencia.
+
+\item Validar el conjunto de datos sintéticos mediante un modelo de red neuronal preentrenado.
 
 \end{enumerate}
 
@@ -57,7 +79,7 @@ El Marco Teórico expone los fundamentos de la electrofisiología cardíaca y de
 
 El Estado del Arte explora los antecedentes académicos en la generación de datos sintéticos biomédicos, contrastando los enfoques de modelado dinámico frente a los enfoques puramente estadísticos.
 
-Los Métodos Propuestos describen el enfoque técnico implementado, detallando el diseño del modelo matemático de Gaussianas, el proceso de optimización numérica con datos reales (MIT-BIH) y la integración de reglas demográficas.
+Los Métodos Propuestos describen el enfoque técnico implementado, detallando el diseño del modelo matemático de Gaussianas, el proceso de optimización numérica con datos reales (MIT-BIH), la integración de las reglas fisiológicas que distinguen sanos de enfermos y el módulo de ritmo parametrizado por el exponente de escalamiento.
 
 Los Resultados Experimentales y Discusión presentan la validación estadística de las señales generadas sobre el registro 100 de la base MIT-BIH, el análisis del error residual y el contraste entre los objetivos proyectados y los efectivamente alcanzados.
 
@@ -68,13 +90,17 @@ Finalmente, las Conclusiones evalúan el cumplimiento de cada objetivo específi
 
 Atendiendo a la observación de la comisión relativa a la necesidad de acotar la problemática en función de las señales efectivamente abordadas, se delimita el alcance de esta investigación en los siguientes términos.
 
-\textbf{Señales objeto de estudio.} El trabajo aborda la generación de latidos de electrocardiograma de superficie correspondientes a ritmo sinusal normal, en registros de una derivación. Se emplea el canal MLII de la MIT-BIH Arrhythmia Database \cite{moody2001impact}, y se procesan exclusivamente los latidos anotados como normales, descartando latidos ectópicos y segmentos con artefactos.
+\textbf{Señales objeto de estudio.} El trabajo aborda la generación de latidos de electrocardiograma de superficie correspondientes a ritmo sinusal normal, en registros de una derivación. Se emplea el canal MLII de la MIT-BIH Arrhythmia Database \cite{moody2001impact}, y se procesan exclusivamente los latidos anotados como normales, descartando latidos ectópicos y segmentos con artefactos. Esos latidos constituyen la semilla morfológica del modelo. La condición de enfermo no se obtiene, por lo tanto, de latidos patológicos reales, sino del desvío controlado de los parámetros de tiempo y voltaje respecto de los rangos normales de referencia y de la dinámica del ritmo.
 
-\textbf{Unidad de generación.} La unidad modelada es el latido individual, segmentado en una ventana centrada en el pico R. La generación de trazados continuos de larga duración, que exigiría modelar además la secuencia de intervalos R-R y su variabilidad, no forma parte del alcance de esta etapa.
+\textbf{Unidad de generación.} Se modelan dos unidades y su acoplamiento. La primera es el latido individual, segmentado en una ventana \emph{asimétrica} respecto del pico R: 250 ms antes y 500 ms después. La asimetría se sigue de la fisiología del complejo, dado que la onda P comienza cerca de 250 ms antes del pico R y la onda T termina entre 400 y 450 ms después, de modo que una ventana centrada no puede contenerlo. La segunda unidad es la secuencia de intervalos R-R, que en la versión anterior de este trabajo quedaba explícitamente fuera del alcance y que aquí se incorpora con su exponente de escalamiento como parámetro.
+
+\textbf{Sobre el significado de las etiquetas.} Las etiquetas de sano y enfermo son etiquetas de construcción y no diagnósticos. Indican si los parámetros de tiempo y voltaje del sujeto sintético se generaron dentro o fuera de los rangos normales de referencia, y con qué exponente de escalamiento se generó su serie de intervalos. La precisión importa porque las distribuciones de $\alpha_1$ en poblaciones sanas y enfermas se solapan de manera sustancial \cite{costa2017fragmentation}, de modo que ningún valor particular del exponente identifica por sí solo una condición clínica. El generador declara cómo fue construido cada registro; no emite un diagnóstico sobre un paciente.
+
+\textbf{Tamaño del conjunto generado.} Cada conjunto sintético se genera con 2.048 latidos, largo que permite estimar el exponente de escalamiento con holgura y alimentar el entrenamiento de un clasificador.
 
 \textbf{Dimensión morfológica.} El modelo reproduce la morfología del ciclo P-QRS-T en amplitud y posición temporal. No aborda el ruido de línea base, la interferencia de red ni los artefactos de movimiento, que constituyen problemas de simulación distintos e independientes del modelado morfológico.
 
-\textbf{Exclusiones explícitas.} Quedan fuera del alcance de esta etapa la generación multiderivación, el modelado de arritmias distintas del ritmo sinusal normal, y la simulación de morfologías patológicas. Estas extensiones se plantean como trabajo futuro y no como resultados comprometidos.
+\textbf{Exclusiones explícitas.} Quedan fuera del alcance de esta etapa la generación multiderivación y la simulación de morfologías arrítmicas específicas, en particular la elevación del segmento ST mediante inyección de funciones de lesión y la Fibrilación Auricular mediante anulación de la onda P. Ambas figuraban como objetivo en la propuesta original y aquí se reclasifican como trabajo futuro, dado que la condición patológica se representa mediante desvíos de los parámetros de tiempo y voltaje y mediante la dinámica del ritmo, y no mediante morfologías ectópicas. Estas extensiones no constituyen resultados comprometidos.
 
 Esta delimitación busca alinear el problema declarado con los objetivos específicos verificables, evitando que el alcance enunciado exceda a aquello que la validación experimental puede sustentar.
 

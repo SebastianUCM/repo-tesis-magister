@@ -2,17 +2,29 @@
 \label{sec:mapeo}
 \begin{spacing}{1.5}
 
-La literatura actual en procesamiento de señales biomédicas e inteligencia artificial aborda la generación de ECGs sintéticos desde dos paradigmas principales: el modelado matemático-fenomenológico y los modelos generativos profundos (Deep Generative Models).
+La literatura sobre generación de señales cardíacas sintéticas se organiza en tres líneas de trabajo, y no en dos como suele presentarse. Las dos primeras son las habitualmente citadas: el modelado matemático-fenomenológico y los modelos generativos profundos. La tercera, menos visible en las revisiones del área porque no produce formas de onda, es la generación de la secuencia de intervalos entre latidos.
 
-A continuación, se analiza la evolución de estos enfoques y la brecha que esta tesis pretende cubrir.
+Esa tercera línea es la que importa para la contribución de este trabajo, y su omisión en la revisión de la etapa anterior fue una carencia del propio documento. A continuación se analizan las tres, y la brecha que queda entre ellas.
 
 \subsection{Modelado Fenomenológico y Dinámico del ECG}
 
 El estándar de oro histórico para la simulación de señales ECG se basa en la descomposición de la morfología P-QRS-T mediante funciones matemáticas explícitas.
 
-McSharry et al. \cite{mcsharry2003dynamical} revolucionaron el campo al proponer un modelo dinámico basado en un sistema de tres ecuaciones diferenciales ordinarias acopladas. Su modelo reproduce la trayectoria del vector cardíaco en un ciclo límite 3D, permitiendo generar señales realistas con variabilidad de frecuencia cardíaca (HRV) y arritmias básicas. Este trabajo es la base fundamental de la mayoría de los simuladores modernos.
+McSharry et al. \cite{mcsharry2003dynamical} propusieron un modelo dinámico basado en un sistema de tres ecuaciones diferenciales ordinarias acopladas, distribuido como ECGSYN. El modelo reproduce la trayectoria del vector cardíaco en un ciclo límite tridimensional, cuyas excursiones angulares producen las deflexiones P, Q, R, S y T, y una vuelta completa del ciclo corresponde a un intervalo R-R. Es la base de la mayoría de los simuladores modernos.
+
+Conviene precisar dos propiedades de ese modelo, porque delimitan con exactitud lo que queda por hacer. La primera es que su morfología es una plantilla única: el mismo conjunto de parámetros gobierna todos los latidos, y la variación morfológica entre latidos aparece solo como subproducto de la velocidad angular variable de la trayectoria. La segunda concierne al ritmo. El propio artículo especifica que los intervalos R-R se generan con un espectro de potencia \emph{bimodal}, construido como la suma de dos distribuciones gaussianas que representan la arritmia sinusal respiratoria en la banda de alta frecuencia y las ondas de Mayer en la de baja frecuencia, con la razón entre ambas bandas como parámetro de control. Un espectro compuesto por dos gaussianas decae más rápido que cualquier ley de potencias fuera de sus picos, de modo que la serie de intervalos resultante no posee estructura de correlación de largo alcance. En el texto completo de ese trabajo no aparecen los términos exponente de escalamiento, fractal, Hurst ni correlación de largo alcance.
 
 Clifford et al. \cite{clifford2004model} perfeccionaron este enfoque utilizando una suma lineal de funciones Gaussianas para ajustar morfologías específicas. Demostraron que la descomposición Gaussiana es computacionalmente eficiente y permite una parametrización precisa de la asimetría de las ondas, lo cual es superior para simular patologías isquémicas donde la morfología del segmento ST es crítica.
+
+\subsection{Generación de la secuencia de intervalos: una línea paralela}
+
+Existe una línea de trabajo dedicada exclusivamente a generar la secuencia de intervalos entre latidos, sin producir forma de onda alguna. Su hito es el desafío PhysioNet/Computers in Cardiology de 2002, cuyo planteamiento describe Moody \cite{moody2002challenge}: los participantes debían construir software capaz de generar series sintéticas de intervalos R-R de veinticuatro horas y, en una segunda etapa, identificar las series sintéticas dentro de un conjunto sin etiquetar que contenía proporciones aproximadamente iguales de datos reales y sintéticos.
+
+El criterio de evaluación de ese desafío merece atención, porque establece el estándar contra el cual se ha juzgado esta línea de trabajo: la \emph{indistinguibilidad}. La calidad de una serie sintética se definió como la incapacidad de un experto o de un algoritmo para separarla de una real. Es un criterio adversarial y no una propiedad declarada: dice que la serie no se delata, no que posea una característica determinada.
+
+Entre las entradas de ese desafío, McSharry et al. \cite{mcsharry2002tachogram} ---el mismo grupo que había desarrollado ECGSYN--- generaron tacogramas de veinticuatro horas combinando dos mecanismos. La variabilidad de corto alcance, atribuida a las ondas de Mayer y a la arritmia sinusal respiratoria, se incorporó mediante un espectro de potencia especificado por sus componentes de baja y alta frecuencia, es decir el mismo procedimiento de ECGSYN. Las fluctuaciones de más largo alcance se produjeron de una manera distinta: conmutando entre estados fisiológicos discretos, incluidos los estados de sueño, cada uno caracterizado por intervalos con media, varianza y tendencia propias, con las distribuciones de conmutación extraídas de datos reales. El resultado se contrastó contra la base de ritmo sinusal normal de MIT-BIH. Entradas complementarias del mismo grupo abordaron la componente circadiana mediante caracterización de artefactos y umbralización \cite{clifford2002artefact}.
+
+Corresponde ser explícito respecto de lo que esa línea deja resuelto, para no reclamar como novedad algo que no lo es: la generación de series sintéticas realistas de intervalos R-R de veinticuatro horas es un problema abordado desde 2002, y abordado por los propios autores del generador de forma de onda de referencia. Lo que ninguno de esos trabajos hace es tomar el exponente de escalamiento de la serie como un parámetro de entrada, ni verificar su recuperación sobre la serie producida. En el texto completo de ambos artículos tampoco aparecen los términos exponente de escalamiento, fractal, Hurst ni correlación de largo alcance.
 
 \subsection{Limitaciones de la IA Generativa (GANs) frente al Control Fisiológico}
 
@@ -28,22 +40,26 @@ Rijnbeek et al. \cite{rijnbeek2001normal} establecieron en un estudio seminal qu
 
 Rautaharju et al. \cite{rautaharju2009aha}, en las guías de la AHA/ACCF, definieron oficialmente las diferencias sexuales en la repolarización ventricular, indicando que el intervalo QTc es fisiológicamente mayor en mujeres. La incorporación de estas reglas en un generador sintético es una innovación necesaria para evitar sesgos de género en el entrenamiento de algoritmos de IA.
 
-%marco rederencial: teorico
-% ¿ Que se sabe sobre el tema?
-% ¿ Que no se sabe
-% ¿ Donde se estudió quien lo estudio
-% ¿ Quese dijo al respecto
-% ¿ Que hace falta estudiar
-% ¿ Cual es la pertinencia de estudiarlo
-% marco referencial: empirico
-% describir los resultados en
-% diferentes escalas:
-% escala internacional
-% escala latinoamericana
-% escala nacional
-% reflexionar o tensionar sobre la evicencia encintrada
-% integrar la informacion en una conclusion
+\subsection{Síntesis: dos líneas que no se cruzaron}
 
-Mientras que McSharry provee la dinámica y las GANs proveen el realismo visual, existe una carencia de herramientas que combinen la flexibilidad matemática de las Gaussianas con las diferenciaciones de sexo y edad estrictas de la clínica (Rijnbeek/AHA). Esta tesis busca llenar ese vacío mediante un generador híbrido parametrizable, cuya primera etapa ---la validación morfológica del núcleo gaussiano--- es la que se presenta y valida en este documento.
+El mapa anterior deja una brecha con una forma precisa, y conviene enunciarla como tal antes que como una carencia genérica.
+
+La línea de los generadores de forma de onda produce morfología, pero con una plantilla única y con un ritmo cuya variabilidad se especifica únicamente a través del contenido de baja y alta frecuencia de su espectro, sin estructura de largo alcance. La línea de los generadores de tacograma produce secuencias de intervalos de veinticuatro horas con estructura temporal, pero no emite forma de onda, y su estructura de largo alcance proviene de conmutar entre estados y no de un exponente declarado. La línea de los modelos generativos profundos produce realismo visual, pero sin control paramétrico ni garantía de que una propiedad estadística solicitada se cumpla.
+
+Ninguna de las tres ocupa la intersección: un generador en el que la morfología esté ajustada latido a latido sobre datos reales \emph{y} el ritmo tenga un exponente de escalamiento como parámetro de entrada verificable. Esa intersección es la contribución de este trabajo, y su enunciado se sostiene sobre el reconocimiento explícito del antecedente de 2002 y no sobre su omisión.
+
+Subsiste además la brecha identificada en la etapa anterior, que este documento no cierra: la ausencia de herramientas que combinen la flexibilidad matemática de las Gaussianas con las diferenciaciones estrictas de sexo y edad de la clínica \cite{rijnbeek2001normal,rautaharju2009aha}. El motor de reglas demográficas correspondiente al tercer objetivo específico no fue implementado, y esa brecha se declara abierta en las conclusiones.
+
+% PENDIENTE (indicación del profesor, conservada del documento anterior).
+% El marco referencial empírico solicitado no está desarrollado: falta describir
+% los resultados en escala internacional, latinoamericana y nacional, tensionar
+% la evidencia encontrada e integrarla en una conclusión. Las tres líneas de
+% trabajo mapeadas arriba son de escala internacional; falta la búsqueda
+% regional y nacional, que requiere acceso a bases bibliográficas.
+%
+% Preguntas guía originales:
+% ¿Qué se sabe sobre el tema? ¿Qué no se sabe? ¿Dónde se estudió, quién lo
+% estudió? ¿Qué se dijo al respecto? ¿Qué hace falta estudiar? ¿Cuál es la
+% pertinencia de estudiarlo?
 
 \end{spacing} 

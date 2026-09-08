@@ -87,5 +87,99 @@ El \textbf{error cuadrático medio} y su raíz cuantifican la discrepancia punto
 
 El \textbf{análisis en el dominio de la frecuencia} evalúa si la señal sintética reproduce el contenido espectral del original. En el contexto electrocardiográfico, la variabilidad de la frecuencia cardíaca constituye el objeto de análisis espectral por excelencia. Shaffer y Ginsberg \cite{shaffer2017overview} sistematizan sus métricas y valores normativos, advirtiendo que las medidas obtenidas en ventanas de distinta duración no son intercambiables. Sundas et al. \cite{sundas2025hrv} documentan, en una revisión de alcance de cinco décadas, la ausencia persistente de protocolos estandarizados de medición, lo que obliga a explicitar el procedimiento empleado en cada estudio.
 
-\end{spacing}
+\subsection{Dinámica latido a latido y correlaciones de largo alcance}
 
+Las secciones anteriores se ocupan de la forma del latido. Esta se ocupa de su
+tiempo, que es una dimensión distinta y con su propia literatura.
+
+\subsubsection{Del ideal homeostático a la dinámica fractal}
+
+La visión clásica de la regulación fisiológica supone que los sistemas operan
+reduciendo la variabilidad hacia un estado de equilibrio. Bajo ese supuesto, un
+corazón sano sería aquel cuyos intervalos entre latidos se aproximan a una
+constante. Peng et al.\ \cite{peng1995quantification} mostraron que ocurre lo
+contrario: la serie de intervalos de un sujeto sano exhibe correlaciones de
+largo alcance propias de los sistemas dinámicos alejados del equilibrio, y en
+insuficiencia cardíaca congestiva severa ese comportamiento correlacionado se
+degrada. La variabilidad del corazón sano no es ruido superpuesto a un reloj:
+es estructura.
+
+Esa estructura tiene una consecuencia metodológica directa. Los índices que
+resumen la variabilidad en una sola cifra de dispersión —la desviación estándar
+de los intervalos, por ejemplo— son ciegos a ella. Dos series pueden compartir
+media y desviación estándar y diferir por completo en la organización temporal
+de sus fluctuaciones, y esa diferencia es precisamente la que la evidencia
+asocia al estado del sistema.
+
+\subsubsection{El análisis de fluctuaciones sin tendencia}
+
+El análisis de fluctuaciones sin tendencia (DFA, por \emph{detrended
+fluctuation analysis}), introducido en el mismo trabajo
+\cite{peng1995quantification}, cuantifica esa organización. El procedimiento
+integra la serie centrada, la divide en ventanas de tamaño $n$, remueve de cada
+ventana una tendencia polinómica, y calcula la fluctuación $F(n)$ como la raíz
+del residuo cuadrático medio. Si la serie posee escalamiento, $F(n)$ crece como
+una potencia de $n$, y el exponente $\alpha$ de esa potencia resume la
+estructura de correlación. La remoción de tendencia por ventanas es lo que
+permite aplicarlo a series no estacionarias, que es el caso de un registro
+cardíaco de larga duración.
+
+La interpretación del exponente es la siguiente \cite{hardstone2012dfa}: con
+$\alpha = 0{,}5$ la serie es indistinguible de un proceso sin memoria; con
+$0{,}5 < \alpha < 1$ presenta correlaciones positivas de largo alcance; con
+$0 < \alpha < 0{,}5$ es anticorrelada; y con $1 < \alpha < 2$ es no
+estacionaria, aproximándose al movimiento browniano en $\alpha = 1{,}5$.
+
+Peng et al.\ reportaron además un cruce de pendiente en la curva log-log, lo
+que motiva reportar dos exponentes en lugar de uno: $\alpha_1$ para las escalas
+cortas y $\alpha_2$ para las largas. La literatura clínica calcula $\alpha_1$
+sobre ventanas de menos de once latidos, y le atribuye el reflejo
+barorreceptor, mientras que $\alpha_2$ refleja los mecanismos regulatorios que
+acotan la fluctuación del ciclo \cite{shaffer2017overview}. Ambos exigen
+registros de varias horas, y esa exigencia no es negociable: sobre series
+cortas el DFA presenta un sesgo conocido que puede producir un exponente
+aparente en series construidas sin memoria alguna.
+
+\subsubsection{Exponente de Hurst y exponente del DFA no son lo mismo}
+
+Conviene fijar la nomenclatura, porque su confusión es frecuente y tiene
+consecuencias numéricas. El exponente de Hurst $H$ describe la autosimilitud de
+un proceso; el exponente $\alpha$ es la pendiente que entrega el DFA. La
+relación entre ambos depende del régimen del proceso
+\cite{hardstone2012dfa}: para ruido gaussiano fraccional, que es estacionario,
+$\alpha = H$ con $\alpha$ entre 0 y 1; para movimiento browniano fraccional, que
+no lo es, $\alpha = H + 1$ con $\alpha$ entre 1 y 2. Informar un valor de $H$
+sin declarar el régimen supuesto deja el número sin significado, y como los
+valores observados en sujetos sanos se ubican justo en la frontera entre ambos
+regímenes, la declaración es indispensable.
+
+Si además la densidad espectral de potencia de la serie sigue
+$S(f) \propto f^{-\beta}$, entonces $\alpha = (\beta+1)/2$. Esta última relación
+es la que permite generar una serie con un exponente prescrito por síntesis
+espectral, y se emplea en el módulo de ritmo descrito en los métodos.
+
+\subsubsection{Valores de referencia y la trampa de la interpretación intuitiva}
+
+Costa et al.\ \cite{costa2017fragmentation}, sobre registros de veinticuatro
+horas de 109 adultos sanos de edad mediana 40 años, reportan $\alpha_1$ de
+1,17 con rango intercuartílico 1,07--1,27, frente a 1,02 con rango
+0,81--1,15 en pacientes con enfermedad coronaria. El exponente, por lo tanto,
+desciende con la patología en esa cohorte.
+
+Ese dato invita a una lectura intuitiva —más desorden en el sano, más orden en
+el enfermo— que conviene resistir por dos razones documentadas. La primera es
+que una variabilidad mayor no es en sí misma señal de salud: hay condiciones
+patológicas que la elevan, y en pacientes post-infarto un aumento de la
+variabilidad no lineal constituye un factor de riesgo independiente de
+mortalidad \cite{shaffer2017overview}. Lo que caracteriza la salud es un nivel
+óptimo y no un extremo. La segunda es que las distribuciones sana y patológica
+se solapan de manera sustancial, de modo que un valor individual del exponente
+no identifica una condición.
+
+La formulación que sostiene la evidencia no es direccional sino de degradación:
+lo que la enfermedad altera son las propiedades de escalamiento, y la
+alteración puede manifestarse hacia valores más aleatorios o más regulares
+según la condición. En este trabajo, en consecuencia, el exponente se emplea
+como coordenada de un régimen dinámico y nunca como etiqueta diagnóstica.
+
+\end{spacing}

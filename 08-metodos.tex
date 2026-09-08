@@ -47,11 +47,11 @@ Para que las señales sean realistas, los parámetros del modelo se ajustan auto
 
 \subsection{Motor de Reglas Fisiológicas y Variabilidad}
 
-El diseño contempla, para la etapa siguiente del plan de trabajo, un motor de reglas basado en estándares clínicos para crear poblaciones diversas:
+El diseño contempla, para la etapa siguiente del plan de trabajo, un motor de reglas basado en estándares clínicos que permita generar dos grupos etiquetados:
 
 \begin{itemize}
-    \item \textbf{Variabilidad Demográfica:} Ajuste automático de los intervalos (PR, QRS, QT) según la edad y el sexo siguiendo las tablas de Rijnbeek \cite{rijnbeek2001normal} y la AHA \cite{rautaharju2009aha}.
-    \item \textbf{Simulación de Patologías:} Modelado matemático de alteraciones como la elevación del segmento ST (infartos) mediante funciones de lesión y la Fibrilación Auricular mediante estocasticidad en el intervalo R-R.
+    \item \textbf{Grupo control (sanos):} Ajuste automático de los intervalos (PR, QRS, QT) y de las amplitudes dentro de los rangos normales de referencia establecidos por las tablas de Rijnbeek \cite{rijnbeek2001normal} y la AHA \cite{rautaharju2009aha}, con una serie de intervalos R-R cuyo exponente de escalamiento corresponde al régimen reportado para sujetos sanos.
+    \item \textbf{Grupo de enfermos:} Desvío controlado de esos mismos parámetros fuera de los rangos normales de referencia, acompañado de una serie de intervalos R-R con exponente de escalamiento degradado. La etiqueta es de construcción y no diagnóstica: registra cómo se generó el sujeto sintético, no una condición clínica atribuida.
 \end{itemize}
 
 
@@ -115,5 +115,104 @@ Como control adicional del procedimiento de optimización se verifica, para cada
 \subsubsection{Alcance de la validación}
 
 La validación descrita se aplica a señales de ritmo sinusal normal. La evaluación de señales con variabilidad demográfica parametrizada o con alteraciones patológicas requerirá criterios adicionales, específicamente el contraste de los intervalos generados contra los rangos de referencia clínicos de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha}, y queda fuera del alcance de la presente etapa.
+
+\subsection{Módulo de ritmo y acoplamiento con la morfología}
+
+El modelo descrito hasta aquí produce latidos. Esta sección describe cómo se
+produce la secuencia temporal en que esos latidos se emiten, y cómo ambas
+partes se unen.
+
+\subsubsection{Generación de la serie de intervalos}
+
+La serie de intervalos R-R se sintetiza en el dominio de la frecuencia. Se
+construyen amplitudes proporcionales a $f^{-\beta/2}$, se les asignan fases
+aleatorias uniformes y se antitransforma, de modo que la serie resultante tenga
+densidad espectral de potencia proporcional a $f^{-\beta}$. Dado que
+$\alpha = (\beta+1)/2$, pedir un exponente de escalamiento $\alpha$ fija el
+exponente espectral $\beta$, y el procedimiento cubre de manera continua el
+rango de $\alpha$ entre 0,5 y 1,5.
+
+Dos detalles del procedimiento son deliberados. Primero, la transformada
+inversa impone periodicidad circular, lo que introduce una correlación espuria
+entre el comienzo y el final de la serie; la mitigación estándar consiste en
+sintetizar una serie varias veces más larga que la requerida y recortarla, y
+aquí se emplea un factor de cuatro. Segundo, la serie normalizada se escala a la
+desviación estándar pedida y se le suma el intervalo medio, y el resultado se
+acota al rango fisiológico. Ese recorte se reporta: si algún intervalo debió
+recortarse, la combinación de dispersión y exponente solicitada no es
+fisiológicamente sostenible y el exponente efectivo de la serie ya no es el
+pedido. Recortar en silencio equivaldría a falsear el resultado.
+
+Se parametriza en $\alpha$ y no en el exponente de Hurst $H$ por una razón
+empírica: los valores publicados para sujetos sanos en registros de
+veinticuatro horas se ubican en torno a 1,17
+\cite{costa2017fragmentation}, es decir por encima de la unidad, y por lo tanto
+fuera del rango que un generador de ruido gaussiano fraccional puede producir.
+
+\subsubsection{Medición del exponente}
+
+El exponente de la serie generada se mide con una implementación propia del DFA,
+según el procedimiento de Peng et al.\ \cite{peng1995quantification}. Se
+excluyen las ventanas menores a dieciséis muestras, porque a esa escala el
+estimador sobreestima el exponente incluso sobre series construidas sin memoria,
+de modo que incluirlas produciría correlaciones inexistentes. Se reportan además
+$\alpha_1$ y $\alpha_2$ por tramos, dado que el cruce de pendiente descrito en
+la literatura hace que un único exponente global pueda ocultar comportamientos
+distintos en escalas cortas y largas.
+
+\subsubsection{Acoplamiento selectivo en el tiempo}
+
+Unir morfología y ritmo exige decidir cómo cambia la forma del latido cuando
+cambia su duración. Mantener la morfología fija sería incoherente: un latido a
+120 latidos por minuto tendría la misma duración de onda T que uno a 50. Y
+estirar el latido completo en proporción al intervalo también lo sería, porque
+la duración del complejo QRS depende de la velocidad de conducción
+intraventricular y no de la frecuencia cardíaca.
+
+El modelo paramétrico permite una tercera opción, que es la adoptada: escalar el
+tiempo de forma \emph{selectiva}. Los parámetros de las ondas Q, R y S se dejan
+intactos, mientras que los centros y los anchos de las ondas P y T se escalan
+por $(RR/RR_{\text{ref}})^{\gamma}$. Esta posibilidad es una ventaja estructural
+del enfoque paramétrico frente a los modelos de ecuaciones diferenciales, donde
+la velocidad angular gobierna el ciclo completo y todas las ondas se estiran en
+bloque.
+
+El valor por defecto es $\gamma = 1$, la relación proporcional, por dos motivos.
+Es la única relación que se pudo verificar en la bibliografía disponible:
+McSharry et al.\ \cite{mcsharry2003dynamical}, citando a Davey
+\cite{davey1999qt}, afirman que el intervalo QT crece linealmente con el
+intervalo R-R. Y reproduce el comportamiento implícito del generador de
+referencia, lo que permite una comparación directa. Se declara, no obstante, una
+aproximación: una relación lineal con ordenada no nula es más plana que una
+proporcional, de modo que $\gamma = 1$ sobrecorrige el intervalo QT a
+frecuencias bajas. El exponente se expone como parámetro para poder contrastar
+las correcciones alternativas de uso clínico.
+
+\subsubsection{Construcción de la señal continua}
+
+Cada latido se evalúa sobre su propio tramo de tiempo, delimitado por los puntos
+medios respecto de los picos R vecinos, y los tramos se unen con un cruce suave
+de veinte milisegundos para que la diferencia de nivel entre latidos vecinos no
+deje un escalón que el análisis espectral leería como contenido de alta
+frecuencia.
+
+La línea base recibe un tratamiento aparte. Sus dos parámetros se ajustaron
+dentro de la ventana de un latido, y extrapolar esa tendencia afín a lo largo de
+un intervalo R-R completo multiplica el desnivel y produce un diente de sierra.
+En su lugar, el nivel de línea base ajustado de cada latido en su pico R se toma
+como nudo y se interpola entre latidos con un polinomio cúbico monótono por
+tramos, lo que entrega la deriva lenta y continua que caracteriza a una línea
+base real.
+
+\subsubsection{Criterio de validación del módulo}
+
+El estado del arte en generación de series de intervalos validó por
+indistinguibilidad: en el desafío de 2002 \cite{moody2002challenge} los
+participantes debían separar series reales de sintéticas en un conjunto sin
+etiquetar. Este trabajo adopta un criterio distinto y verificable de manera
+independiente: se pide al generador un exponente, se mide el exponente de la
+serie que produjo, y se caracteriza el sesgo del estimador en función del largo
+del registro. La validación no consiste en que la serie parezca real, sino en que
+posea, de manera medible, la propiedad que se le pidió.
 
 \end{spacing}

@@ -6,15 +6,17 @@
 
 La validación experimental se realizó sobre la MIT-BIH Arrhythmia Database \cite{moody2001impact}, disponible públicamente a través de PhysioNet. De los 48 registros que componen la base, se utilizó el registro 100, muestreado a 360 Hz sobre dos derivaciones, del cual se procesó el canal MLII.
 
-La extracción de latidos se apoyó en las anotaciones de referencia del propio registro. De las 2.274 anotaciones disponibles se seleccionaron exclusivamente aquellas etiquetadas como latido sinusal normal (símbolo \texttt{N}), descartando latidos ectópicos, artefactos y marcas de ritmo. Este filtrado produjo un conjunto de 2.238 latidos.
+La extracción de latidos se apoyó en las anotaciones de referencia del propio registro. De las 2.274 anotaciones disponibles se seleccionaron exclusivamente aquellas etiquetadas como latido sinusal normal (símbolo \texttt{N}), descartando latidos ectópicos, artefactos y marcas de ritmo. Este filtrado produjo un conjunto de 2.237 latidos, tras descartar uno cuya ventana de extracción se salía del registro.
 
-Cada latido se extrajo mediante una ventana de 128 muestras centrada en el pico R anotado, equivalente a aproximadamente 356 ms de señal, y se normalizó mediante puntuación Z, de modo que la comparación entre señal real y sintética fuese independiente de la ganancia del canal.
+Cada latido se extrajo mediante una ventana \emph{asimétrica} respecto del pico R anotado: 250 ms antes y 500 ms después, es decir 270 muestras a 360 Hz, y se normalizó mediante puntuación Z, de modo que la comparación entre señal real y sintética fuese independiente de la ganancia del canal.
+
+La asimetría se sigue de la fisiología del complejo y no de una conveniencia de implementación. La onda P precede al pico R en unos 150 a 200 ms y dura entre 80 y 110 ms, de modo que su inicio se ubica cerca de 250 ms antes; la onda T termina entre 400 y 450 ms después, dado que el intervalo QT normal ronda los 400 ms. Una ventana centrada en el pico R no puede contener el complejo completo, y la Subsección \ref{sec:validez} cuantifica lo que ocurre cuando se usa una.
 
 El desarrollo se implementó en Python 3.12, empleando NumPy y SciPy \cite{virtanen2020scipy} para el cálculo numérico y la optimización, y WFDB para la lectura de los registros.
 
 \subsection{Diseño de los experimentos}
 
-Para cada uno de los 2.238 latidos se ejecutó un ajuste independiente de los veintidós parámetros del modelo. Veinte de ellos corresponden a la amplitud, la posición temporal y los anchos ascendente y descendente de las cinco Gaussianas asimétricas asociadas a las ondas P, Q, R, S y T. Los dos restantes describen la línea base como un desnivel constante y una tendencia lineal, ambos referidos al instante del pico R, y permiten que el modelo siga el desnivel del segmento ST en lugar de retornar obligadamente a cero entre deflexiones.
+Para cada uno de los 2.237 latidos se ejecutó un ajuste independiente de los veintidós parámetros del modelo. Veinte de ellos corresponden a la amplitud, la posición temporal y los anchos ascendente y descendente de las cinco Gaussianas asimétricas asociadas a las ondas P, Q, R, S y T. Los dos restantes describen la línea base como un desnivel constante y una tendencia lineal, ambos referidos al instante del pico R, y permiten que el modelo siga el desnivel del segmento ST en lugar de retornar obligadamente a cero entre deflexiones.
 
 La función objetivo minimizada fue el error cuadrático medio (MSE) entre la señal real y la sintética. El ajuste se realizó mediante el algoritmo L-BFGS-B \cite{byrd1995limited}, con restricciones de caja definidas para cada parámetro a partir de rangos fisiológicos, con el propósito de impedir la generación de morfologías biológicamente imposibles.
 
@@ -28,41 +30,45 @@ La evaluación de fidelidad se efectuó comparando cada señal sintética con el
 
 \subsection{Fidelidad morfológica de las señales generadas}
 
-El Cuadro \ref{tab:metricas} resume el desempeño del generador sobre los 2.238 latidos procesados.
+El Cuadro \ref{tab:metricas} resume el desempeño del generador sobre los 2.237 latidos procesados.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|l|c|c|}
 \hline
 \textbf{Estadístico} & \textbf{Correlación de Pearson} & \textbf{RMSE} \\ \hline
-Media & 0,9986 & 0,0496 \\ \hline
-Desviación estándar & 0,0020 & 0,0162 \\ \hline
-Mínimo & 0,9406 & 0,0286 \\ \hline
-Mediana & 0,9989 & 0,0463 \\ \hline
-Máximo & 0,9996 & 0,3407 \\ \hline
+Media & 0,9969 & 0,0779 \\ \hline
+Desviación estándar & 0,0015 & 0,0148 \\ \hline
+Mínimo & 0,9571 & 0,0466 \\ \hline
+Mediana & 0,9971 & 0,0758 \\ \hline
+Máximo & 0,9989 & 0,2916 \\ \hline
 \end{tabular}
-\caption{Métricas de fidelidad del modelo de veintidós parámetros sobre 2.238 latidos normales del registro 100 de MIT-BIH.}
+\caption{Métricas de fidelidad del modelo de veintidós parámetros sobre 2.237 latidos normales del registro 100 de MIT-BIH, con la ventana asimétrica de 750 ms.}
 \label{tab:metricas}
 \end{table}
 
-La correlación media alcanzada fue de 0,9986 con una desviación estándar de 0,0020. La dispersión reducida indica que el desempeño es estable a lo largo del registro y no depende de latidos particularmente favorables: el 99,9\% de los latidos superó una correlación de 0,95, ninguno quedó por debajo de 0,90 y solo 5 latidos de 2.238 (0,2\%) se ubicaron por debajo de 0,99.
+La correlación media alcanzada fue de 0,9969 con una desviación estándar de 0,0015, y el RMSE medio de 0,0779 desviaciones estándar de la señal normalizada con una desviación de 0,0148. La dispersión reducida de ambas métricas indica que el desempeño es estable a lo largo del registro y no depende de latidos particularmente favorables: la totalidad de los latidos supera una correlación de 0,95, el 99,7\% supera 0,99, ninguno queda por debajo de 0,90, y el 94,1\% presenta un RMSE inferior a 0,10. El peor latido del registro alcanza aun así una correlación de 0,9571. El sesgo medio del residuo fue de $-0{,}0000$ con desviación estándar de 0,0004, es decir indistinguible de cero: el modelo no deja componente sistemática sin explicar.
 
-El RMSE medio fue de 0,0496 desviaciones estándar de la señal normalizada, con el 98,9\% de los latidos por debajo de 0,10. A diferencia de la primera iteración del modelo, la correlación elevada y el error de amplitud bajo son ahora consistentes entre sí, de modo que la fidelidad no descansa en una métrica invariante ante transformaciones afines.
+Corresponde una advertencia sobre la comparación con la iteración anterior de este modelo, que sobre una ventana centrada de 356 ms reportaba una correlación de 0,9986 y un RMSE de 0,0496. Esas cifras \emph{no son comparables} con las de aquí. La ventana pasó de 356 a 750 ms, de modo que hay más del doble de señal que explicar con el mismo número de parámetros, y un error mayor sobre una ventana mayor no indica un modelo peor. Lo que sí es comparable entre ambas versiones, y lo que se reporta a continuación, es la validez de los parámetros ajustados.
 
 El Cuadro \ref{tab:iteraciones} contrasta ambas iteraciones del modelo sobre el mismo conjunto de latidos. La primera es la implementación de veinte parámetros con restricciones expresadas en unidades de señal cruda; la segunda incorpora el término de línea base y expresa las restricciones de amplitud como fracción del pico del latido.
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|l|c|c|}
+\begin{tabular}{|p{5.2cm}|c|c|c|}
 \hline
-\textbf{Indicador} & \textbf{Primera iteración} & \textbf{Segunda iteración} \\ \hline
-Parámetros del modelo & 20 & 22 \\ \hline
-Correlación de Pearson & 0,9647 $\pm$ 0,0108 & 0,9986 $\pm$ 0,0020 \\ \hline
-RMSE & 0,3985 $\pm$ 0,0287 & 0,0496 $\pm$ 0,0162 \\ \hline
-Sesgo medio del residuo & $-0{,}1457 \pm 0{,}0185$ & $-0{,}0000 \pm 0{,}0020$ \\ \hline
-Parámetros saturados por latido & 11,8 de 20 & 1,8 de 22 \\ \hline
+\textbf{Indicador} & \textbf{Primera} & \textbf{Segunda} & \textbf{Tercera} \\ \hline
+Ventana de extracción & 356 ms centrada & 356 ms centrada & 750 ms asimétrica \\ \hline
+Restricciones de amplitud & en mV & por fracción & por fracción \\ \hline
+Parámetros del modelo & 20 & 22 & 22 \\ \hline
+Correlación de Pearson & 0,9647 & 0,9986 & 0,9969 \\ \hline
+RMSE & 0,3985 & 0,0496 & 0,0779 \\ \hline
+Sesgo medio del residuo & $-0{,}1457$ & $-0{,}0000$ & $-0{,}0000$ \\ \hline
+Parámetros saturados por latido & 11,8 de 20 & 1,8 de 22 & 0,83 de 22 \\ \hline
+Latidos con el centro de T fuera de la ventana & 1.637 de 2.238 & 1.637 de 2.238 & 0 de 2.237 \\ \hline
+Asimetría mediana del ancho de P & 7,63 & 7,63 & 1,23 \\ \hline
 \end{tabular}
-\caption{Contraste entre las dos iteraciones del modelo sobre los mismos 2.238 latidos. Ambas columnas son reproducibles con el mismo código, seleccionando el conjunto de restricciones por línea de comandos.}
+\caption{Contraste entre las tres iteraciones del modelo. Las columnas de RMSE no son comparables entre la segunda y la tercera, porque las ventanas abarcan cantidades distintas de señal; las filas de validez de parámetros sí lo son. Las tres son reproducibles con el mismo código, seleccionando la ventana y el conjunto de restricciones por línea de comandos.}
 \label{tab:iteraciones}
 \end{table}
 
@@ -107,7 +113,95 @@ Cada corrección, por separado, mejora el error de forma modesta: la línea base
 
 Tras ambas correcciones el sesgo del residuo es nulo dentro de la precisión de la medición y el promedio de parámetros fijados por un límite cae de 11,8 de 20 a 1,8 de 22.
 
-La saturación, sin embargo, no desaparece por completo, y la limitación remanente no está en la elección de los límites. Los anchos de las ondas P y T siguen fijados por su cota en cerca de la mitad de los latidos: el ancho descendente de T en el 49,8\% de los casos y el ancho ascendente de P en el 46,8\%. La causa es el largo de la ventana de extracción. Las 128 muestras a 360 Hz cubren 356 ms, mientras que un complejo P-QRS-T normal se extiende entre 600 y 800 ms, de modo que las ondas P y T quedan parcialmente fuera del recorte y de ellas se observa únicamente un flanco. Sus anchos están, por lo tanto, débilmente determinados por los datos disponibles. Corregirlo exige redefinir la ventana de extracción y con ella la definición operativa de latido adoptada en esta metodología, razón por la cual se declara como limitación y se remite a la sección de trabajos futuros.
+\subsection{Efecto de la redefinición de la ventana}
+\label{sec:validez}
+
+La limitación identificada en la iteración anterior era el largo de la ventana, y su corrección constituye el resultado más claro de esta etapa. Con la ventana centrada de 356 ms, el pico de la onda T caía fuera del recorte en 1.637 de los 2.238 latidos, con una posición mediana equivalente a 243 ms más allá del borde, y la onda P ajustada presentaba una razón mediana de 7,63 entre sus anchos de subida y de bajada, con un máximo de 30. Una onda que sube siete veces más lento de lo que baja no es una onda P: es el resultado de ajustar una gaussiana contra un flanco parcial. Los parámetros de P y T de esa iteración eran, en consecuencia, artefactos del recorte y no descripciones morfológicas.
+
+Con la ventana asimétrica de 750 ms, las cinco ondas caen dentro del recorte en los 2.237 latidos, y los centros ajustados medianos resultan $-159$ ms para P, $-24$ ms para Q, $+2$ ms para R, $+15$ ms para S y $+339$ ms para T, valores compatibles con la descripción clínica del complejo. La asimetría mediana del ancho de la onda P desciende de 7,63 a 1,23, y el promedio de parámetros determinados por una cota cae de 11,8 de 20 a 0,83 de 22.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{fig/validacion_visual_v2.png}
+\caption{Ajuste morfológico bajo la ventana asimétrica. La línea continua es el latido real, la discontinua el modelo ajustado, la punteada el término de línea base, y el panel inferior el residuo punto a punto. El complejo P-QRS-T completo queda dentro de la ventana y el residuo es ruido simétrico en torno a cero, sin estructura ni deriva.}
+\label{fig:validacion_v2}
+\end{figure}
+
+\subsubsection{Limitación remanente: la forma de la onda T}
+
+La saturación no desaparece por completo. Un parámetro concentra prácticamente toda la que queda: el ancho de la rama descendente de la onda T converge sobre su cota de 180 ms en el 71,9\% de los latidos.
+
+Se puso a prueba la hipótesis de que esa gaussiana estaba absorbiendo una deriva que la línea base afín no podía seguir a lo largo de 750 ms, agregando un término cuadrático de línea base como parámetro veintitrés, con el gradiente analítico extendido y verificado contra diferencias finitas. La hipótesis queda \emph{rechazada}: el RMSE mejora apenas un 2,3\%, de 0,0781 a 0,0763, y la saturación cae solo de 25 a 22 latidos de 40. Aflojar la cota produce un resultado análogo: con un tope de 300 ms el ajuste elige 232 ms y el error mejora un 2,7\%, y con un tope de 600 ms elige el mismo valor, de modo que es el dato y no la cota quien lo fija. Pero un ancho de 232 ms no describe una onda T, cuya duración total ronda los 160 ms: describe una deriva.
+
+Se puso a prueba también la opción de representar la onda T con \emph{dos} gaussianas en lugar de una, llevando el modelo a veintiséis parámetros, con los centros ordenados por rango para que las dos componentes no fuesen intercambiables y con el gradiente analítico correspondiente verificado. El resultado también es negativo, y por tres razones convergentes. El RMSE mejora un 3,6\%, de 0,0776 a 0,0748, mejora que cuatro parámetros adicionales garantizan casi por construcción en un modelo anidado. El criterio de información bayesiano, que penaliza el número de parámetros, empeora en 2,5 unidades, es decir favorece al modelo de veintidós. Y la saturación, que era el problema a resolver, \emph{aumenta}: el promedio de parámetros determinados por una cota sube de 0,68 a 1,62 por latido, y la rama descendente de la última gaussiana de T pasa de saturar en 26 a saturar en 34 latidos de 40. El modelo de veintiséis parámetros no describe mejor la onda T: está sobreparametrizado para los datos disponibles, y el optimizador empuja el exceso contra los bordes del dominio.
+
+Con tres hipótesis puestas a prueba y rechazadas —el término cuadrático de línea base, el aflojamiento de la cota y la segunda gaussiana— la conclusión que sostiene la evidencia es que el residuo de la onda T no se corrige agregando parámetros a esta familia de funciones. La explicación remanente, visible en la Figura \ref{fig:validacion_v2}, es que la onda T de este registro presenta una meseta ancha y no una campana, y una suma de gaussianas asimétricas no representa un plateau con parsimonia. La limitación se declara como tal, ahora acotada por medición y no por conjetura: corresponde explorar otra familia de funciones para la repolarización, y no ampliar la actual.
+
+Vale registrar un detalle metodológico de esa prueba. Un primer intento, realizado sin gradiente analítico, produjo un RMSE \emph{peor} con \emph{más} parámetros, lo cual es imposible en un modelo anidado y por lo tanto delataba falta de convergencia y no una propiedad del modelo. Sin ese chequeo de coherencia se habría concluido lo contrario de lo correcto.
+
+\subsection{Módulo de ritmo: recuperación del exponente prescrito}
+
+Las secciones anteriores evalúan la forma del latido. Esta evalúa el tiempo
+entre latidos, que es el aporte de esta versión del trabajo, y lo hace con un
+criterio distinto: en lugar de preguntar si la serie generada se parece a una
+real, se pregunta si posee la propiedad que se le pidió.
+
+\subsubsection{Verificación del generador contra su propio estimador}
+
+El primer control consiste en comprobar que la relación
+$\alpha = (\beta+1)/2$ se cumple en la implementación. Sobre series de 32.768
+puntos y diez realizaciones por valor, el exponente medido coincide con el
+pedido dentro de 0,005 para todo el rango de $\alpha$ entre 0,5 y 1,5. Esto
+verifica el par generador-estimador de manera conjunta: un error en cualquiera
+de los dos aparecería como una discrepancia sistemática.
+
+\subsubsection{Sesgo del estimador según el largo del registro}
+
+El Cuadro \ref{tab:sesgo} reporta el exponente recuperado en función del
+exponente pedido y del largo de la serie. Este cuadro no es un accesorio: es la
+condición para poder interpretar un exponente medido sobre datos reales. El
+sesgo es negativo, crece con $\alpha$ y decrece con el largo del registro, de
+modo que sin caracterizarlo no hay forma de distinguir un exponente
+fisiológico de un artefacto de un registro corto.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{$\alpha$ pedido} & \textbf{$N=512$} & \textbf{$N=4.096$} & \textbf{$N=32.768$} \\ \hline
+0,6 & $0{,}573 \pm 0{,}063$ & $0{,}595 \pm 0{,}029$ & $0{,}598 \pm 0{,}015$ \\ \hline
+0,8 & $0{,}758 \pm 0{,}075$ & $0{,}791 \pm 0{,}034$ & $0{,}796 \pm 0{,}019$ \\ \hline
+1,0 & $0{,}946 \pm 0{,}085$ & $0{,}987 \pm 0{,}037$ & $0{,}993 \pm 0{,}022$ \\ \hline
+1,2 & $1{,}135 \pm 0{,}094$ & $1{,}183 \pm 0{,}040$ & $1{,}190 \pm 0{,}023$ \\ \hline
+1,4 & $1{,}325 \pm 0{,}098$ & $1{,}378 \pm 0{,}045$ & $1{,}386 \pm 0{,}024$ \\ \hline
+\end{tabular}
+\caption{Exponente recuperado de la serie generada, sobre veinte realizaciones por celda. El sesgo del estimador crece con el exponente y decrece con el largo del registro.}
+\label{tab:sesgo}
+\end{table}
+
+\subsubsection{Cohorte sintética de veinticuatro horas}
+
+Se generó una cohorte de cincuenta sujetos sintéticos de veinticuatro horas cada
+uno, con 101.647 latidos por sujeto y un exponente sorteado por sujeto de una
+distribución normal, de modo que la cohorte tenga dispersión entre individuos y
+no un único exponente repetido. La correlación entre el exponente pedido y el
+recuperado es de 0,98, con un error absoluto medio de 0,014, y ningún intervalo
+requirió recorte por salirse del rango fisiológico. El exponente de corto
+alcance de la cohorte resultó $\alpha_1 = 1{,}17 \pm 0{,}09$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig/validacion_hurst.png}
+\caption{Validación del módulo de ritmo. (a) Ocho segundos de ECG sintético con ritmo variable; las marcas señalan los picos R. (b) Dos tacogramas R-R con la misma media y la misma desviación estándar pero distinto exponente de escalamiento. (c) Análisis de fluctuaciones sin tendencia de esas dos series, con el exponente pedido y el recuperado. (d) Cohorte de cincuenta sujetos sintéticos de veinticuatro horas: exponente pedido contra exponente recuperado, con la recta identidad como referencia.}
+\label{fig:ritmo}
+\end{figure}
+
+El panel (b) de la Figura \ref{fig:ritmo} muestra el punto de toda la
+construcción. Los dos tacogramas comparten media y desviación estándar, de modo
+que cualquier índice convencional de variabilidad en el dominio del tiempo los
+reportaría como equivalentes; difieren únicamente en la organización temporal de
+sus fluctuaciones, que es la dimensión que el exponente captura y que esos
+índices no ven.
 
 \subsection{Alcance efectivo respecto a los resultados proyectados}
 
@@ -120,16 +214,16 @@ Por transparencia metodológica, el Cuadro \ref{tab:alcance} contrasta los resul
 \textbf{Resultado proyectado} & \textbf{Estado actual} \\ \hline
 Framework de generación paramétrica en Python & Implementado y funcional para latidos sinusales normales \\ \hline
 Validación de fidelidad frente a MIT-BIH & Realizada sobre 1 registro de los 48 de la base \\ \hline
-Dataset de al menos 5.000 latidos sintéticos & 2.238 latidos parametrizados \\ \hline
-Variabilidad demográfica pediátrica y geriátrica & No implementada \\ \hline
-Modelado de patologías (elevación del ST, Fibrilación Auricular) & No implementado \\ \hline
+Dataset de al menos 5.000 latidos sintéticos & 2.237 latidos parametrizados, más una cohorte de 50 series de 24 horas \\ \hline
+Motor de reglas fisiológicas para grupo control y grupo de enfermos & No implementado \\ \hline
+Validación del conjunto sintético con red neuronal preentrenada & No realizada \\ \hline
 Publicación en revista indexada & Pendiente \\ \hline
 \end{tabular}
 \caption{Contraste entre los resultados proyectados y los alcanzados.}
 \label{tab:alcance}
 \end{table}
 
-El motor de reglas fisiológicas basado en las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha}, así como el modelado de alteraciones patológicas, quedan fuera del alcance validado en esta etapa. En consecuencia, las conclusiones sobre fidelidad que se presentan a continuación son válidas para ritmo sinusal normal en población adulta, y no son extrapolables a otras poblaciones ni a condiciones patológicas sin validación adicional.
+El motor de reglas fisiológicas basado en las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha}, del que depende la distinción entre el grupo control y el grupo de enfermos, así como la validación del conjunto sintético mediante un modelo preentrenado, quedan fuera del alcance validado en esta etapa. En consecuencia, las conclusiones sobre fidelidad que se presentan a continuación son válidas para ritmo sinusal normal en población adulta, y no son extrapolables a sujetos con parámetros fuera de rango normal sin validación adicional.
 
 \subsection{Resultados de responsabilidad social}
 

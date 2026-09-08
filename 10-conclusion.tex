@@ -9,7 +9,11 @@ A partir de los resultados obtenidos se extraen las siguientes conclusiones, org
 \subsubsection{Sobre los objetivos alcanzados}
 
 \begin{itemize}
-    \item \textbf{Viabilidad del modelado paramétrico (objetivo 1).} La superposición de cinco funciones Gaussianas asimétricas, complementada con un término de línea base, reproduce la morfología del ciclo P-QRS-T en ritmo sinusal normal con una correlación de Pearson media de 0,9986 y un RMSE medio de 0,0496 sobre 2.238 latidos. Las desviaciones estándar respectivas, 0,0020 y 0,0162, indican que el desempeño es estable a lo largo del registro y no depende de latidos favorables aislados.
+    \item \textbf{Viabilidad del modelado paramétrico (objetivo 1).} La superposición de cinco funciones Gaussianas asimétricas, complementada con un término de línea base, reproduce la morfología del ciclo P-QRS-T en ritmo sinusal normal con una correlación de Pearson media de 0,9969 y un RMSE medio de 0,0779 sobre 2.237 latidos, con desviaciones estándar de 0,0015 y 0,0148 respectivamente y un sesgo del residuo indistinguible de cero. Esas cifras corresponden a la ventana asimétrica de 750 ms y no son comparables con las de la iteración anterior sobre una ventana de 356 ms, que abarcaba menos de la mitad de la señal.
+
+    \item \textbf{Validez fisiológica de los parámetros ajustados.} La redefinición de la ventana de extracción, de una ventana centrada de 356 ms a una asimétrica de 750 ms, es lo que convierte los parámetros en descripciones morfológicas. Con la ventana anterior, el pico de la onda T caía fuera del recorte en 1.637 de 2.238 latidos y la onda P ajustada subía en mediana 7,63 veces más lento de lo que bajaba: sus parámetros eran artefactos del recorte. Con la ventana actual las cinco ondas caen dentro para todos los latidos, la asimetría de la onda P baja a 1,23, y los centros medianos —$-159$ ms para P, $-24$ para Q, $+2$ para R, $+15$ para S y $+339$ para T— son compatibles con la descripción clínica del complejo.
+
+    \item \textbf{Control verificable de la dinámica latido a latido (objetivo 4).} El módulo de ritmo genera la serie de intervalos con el exponente de escalamiento como parámetro de entrada, y ese exponente se recupera de la serie generada: sobre una cohorte de cincuenta sujetos sintéticos de veinticuatro horas la correlación entre el exponente pedido y el medido es de 0,98, con un error absoluto medio de 0,014. El sesgo del estimador quedó caracterizado en función del largo del registro, lo que permite distinguir un exponente fisiológico de un artefacto de un registro corto. El criterio de validación empleado difiere del que estableció el estado del arte en 2002, que fue la indistinguibilidad respecto de series reales: aquí se verifica una propiedad declarada y medible.
 
     \item \textbf{Eficacia de la optimización con restricciones (objetivo 2).} El algoritmo L-BFGS-B \cite{byrd1995limited} con restricciones de caja permitió ajustar los veintidós parámetros del modelo a cada latido individual sin generar morfologías biológicamente imposibles. El resultado depende, no obstante, de que las restricciones estén expresadas en las mismas unidades que la señal a la que se aplican. La primera implementación derivó sus cotas de amplitud de rangos fisiológicos en milivoltios y las aplicó a latidos normalizados por puntuación Z: el 99,8\% de los latidos convergió exactamente sobre la cota superior de la amplitud de la onda R y, en promedio, 11,8 de los 20 parámetros quedaron determinados por un límite en lugar de por los datos. Expresadas las cotas de amplitud como fracción del pico de cada latido, ese promedio desciende a 1,8 de 22.
 
@@ -20,40 +24,44 @@ A partir de los resultados obtenidos se extraen las siguientes conclusiones, org
 
 \subsubsection{Sobre los objetivos no alcanzados}
 
-La honestidad metodológica exige declarar que tres de los cinco objetivos específicos no fueron completados en esta etapa:
+La honestidad metodológica exige declarar que tres de los seis objetivos específicos no fueron completados en esta etapa:
 
 \begin{itemize}
-    \item El motor de reglas fisiológicas basado en las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha} (objetivo 3) no fue implementado. En consecuencia, el generador no produce, por ahora, variabilidad demográfica por edad ni por sexo.
+    \item El motor de reglas fisiológicas basado en las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha} (objetivo 3) no fue implementado. En consecuencia, el generador no distingue por ahora sujetos sanos de sujetos enfermos mediante sus parámetros de tiempo y voltaje.
 
-    \item El modelado de alteraciones patológicas (objetivo 4), específicamente la elevación del segmento ST y la Fibrilación Auricular, tampoco fue abordado.
+    \item La validación de fidelidad (objetivo 5) se completó parcialmente: se calcularon la correlación de Pearson y el RMSE, pero no se realizó el análisis en el dominio de la frecuencia comprometido en la propuesta.
 
-    \item La validación (objetivo 5) se completó parcialmente: se calcularon la correlación de Pearson y el RMSE, pero no se realizó el análisis en el dominio de la frecuencia comprometido en la propuesta.
+    \item La validación del conjunto sintético mediante un modelo de red neuronal preentrenado (objetivo 6) no fue abordada en esta etapa.
 \end{itemize}
 
 \subsubsection{Sobre la hipótesis}
 
-La hipótesis planteada sostenía que es posible construir un generador de señales ECG sintéticas basado en Gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo además la parametrización controlada por edad, sexo y condición patológica.
+La hipótesis planteada sostenía que es posible construir un generador de señales ECG sintéticas basado en Gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo además la parametrización controlada que distinga entre sujetos sanos y enfermos.
 
-La evidencia obtenida valida la primera parte de la hipótesis y deja la segunda sin verificar. La reproducción morfológica quedó demostrada para ritmo sinusal normal en población adulta. La parametrización demográfica y patológica no fue puesta a prueba, por lo que no puede afirmarse ni refutarse con los datos disponibles.
+La evidencia obtenida valida la primera parte de la hipótesis y deja la segunda sin verificar. La reproducción morfológica quedó demostrada para ritmo sinusal normal en población adulta. La parametrización que distingue sanos de enfermos no fue puesta a prueba, por lo que no puede afirmarse ni refutarse con los datos disponibles.
 
-Corresponde asimismo precisar la expresión ``alta fidelidad''. La primera iteración del modelo alcanzaba una correlación de 0,9647 con un RMSE de 0,3985, combinación que describe una reconstrucción morfológicamente correcta pero con una discrepancia de amplitud apreciable: la correlación de Pearson es invariante ante transformaciones afines y, por sí sola, sobreestima el desempeño del generador. En el modelo corregido ambas métricas son consistentes entre sí —0,9986 y 0,0496— de modo que la expresión resulta defendible, si bien únicamente para ritmo sinusal normal en población adulta.
+Corresponde asimismo precisar la expresión ``alta fidelidad''. La primera iteración del modelo alcanzaba una correlación de 0,9647 con un RMSE de 0,3985, combinación que describe una reconstrucción morfológicamente correcta pero con una discrepancia de amplitud apreciable: la correlación de Pearson es invariante ante transformaciones afines y, por sí sola, sobreestima el desempeño del generador. En el modelo actual ambas métricas son consistentes entre sí —0,9969 y 0,0779 sobre una ventana que abarca el complejo completo— y el residuo no presenta componente sistemática, de modo que la expresión resulta defendible, si bien únicamente para ritmo sinusal normal en población adulta.
+
+Respecto de la segunda proposición de la hipótesis, la relativa a la dinámica latido a latido, la evidencia la sostiene dentro de un alcance preciso: el exponente de escalamiento es efectivamente un parámetro de entrada del generador y se recupera de la serie producida. Lo que no se sostiene, y no se afirma, es que un valor determinado del exponente corresponda a una condición clínica determinada. Las distribuciones reportadas para poblaciones sanas y con enfermedad coronaria se solapan de manera sustancial \cite{costa2017fragmentation}, y una variabilidad elevada no constituye por sí misma un marcador de salud \cite{shaffer2017overview}. El exponente se emplea, por lo tanto, como coordenada de un régimen dinámico y no como etiqueta.
 
 \subsection{Trabajos Futuros}
 
 Las líneas de trabajo inmediatas se desprenden directamente de las limitaciones identificadas en la sección de resultados:
 
 \begin{enumerate}
-    \item \textbf{Redefinir la ventana de extracción.} La ventana de 128 muestras a 360 Hz cubre 356 ms, mientras que un complejo P-QRS-T normal se extiende entre 600 y 800 ms. Las ondas P y T quedan parcialmente fuera del recorte y sus anchos permanecen determinados por sus cotas en cerca de la mitad de los latidos, pese a la corrección de las restricciones. Ampliar la ventana obliga a redefinir la unidad de análisis y a recalcular las métricas reportadas, por lo que constituye una decisión metodológica y no un ajuste de implementación.
+    \item \textbf{Revisar la forma funcional de la onda T.} Es la única limitación morfológica que persiste tras la redefinición de la ventana: el ancho de la rama descendente de la onda T queda determinado por su cota en el 71,9\% de los latidos. Se descartaron por medición dos explicaciones —un término cuadrático de línea base y el aflojamiento de la propia cota—, ambas con mejoras del orden del dos por ciento. La onda T del registro analizado presenta una meseta ancha y no una campana, forma que una única gaussiana asimétrica no puede representar. Corresponde evaluar una segunda gaussiana para esa onda, u otra familia de funciones.
+
+    \item \textbf{Calibrar el módulo de ritmo contra registros reales de larga duración.} La verificación actual del exponente es interna: se comprueba que el generador produce lo que se le pide. Falta el contraste externo, para el cual la base \emph{Normal Sinus Rhythm RR Interval Database} de PhysioNet \cite{physionet_nsr2db} provee anotaciones de latido de 54 registros de larga duración de sujetos sanos, es decir intervalos entre latidos sin forma de onda, que es exactamente el material que este módulo necesita.
 
     \item \textbf{Extender la validación al conjunto de la base.} Los resultados presentados corresponden a un único registro de los 48 que componen MIT-BIH. La generalización del método exige repetir el procedimiento sobre el conjunto completo y reportar la variabilidad entre registros.
 
-    \item \textbf{Implementar el motor de reglas demográficas.} Integrar las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha} para modular los intervalos PR, QRS y QT según edad y sexo, y validar las señales resultantes contra rangos de referencia clínicos.
-
-    \item \textbf{Modelar alteraciones patológicas.} Incorporar la elevación del segmento ST mediante funciones de lesión y la Fibrilación Auricular mediante estocasticidad del intervalo R-R con anulación de la onda P.
+    \item \textbf{Implementar el motor de reglas fisiológicas.} Integrar las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha} para modular los intervalos PR, QRS y QT dentro y fuera de los rangos normales de referencia, de modo que el generador produzca un grupo control de sujetos sanos y un grupo de sujetos enfermos, y validar las señales resultantes contra esos mismos rangos.
 
     \item \textbf{Completar la validación en el dominio de la frecuencia.} Contrastar los espectros de potencia de las señales sintéticas y reales, según lo comprometido en el quinto objetivo específico.
 
-    \item \textbf{Validar la utilidad para aumentación de datos.} La justificación última de este trabajo es mejorar el entrenamiento de clasificadores de arritmias. Corresponde entrenar un clasificador con datos reales, repetir el entrenamiento incorporando las señales sintéticas y medir la diferencia de desempeño. Sin este experimento, la utilidad práctica del generador permanece como hipótesis.
+    \item \textbf{Validar el conjunto sintético con un modelo preentrenado.} Corresponde al sexto objetivo específico: someter las señales generadas a un clasificador ya entrenado y contrastar su desempeño sobre datos reales y sintéticos. De ese contraste depende la utilidad práctica del generador para aumentación de datos, que hasta aquí permanece como hipótesis.
+
+    \item \textbf{Modelar alteraciones patológicas específicas.} Extensión declarada fuera del alcance de esta etapa: incorporar la elevación del segmento ST mediante funciones de lesión y la Fibrilación Auricular mediante estocasticidad del intervalo R-R con anulación de la onda P.
 \end{enumerate}
 
 \end{spacing}
