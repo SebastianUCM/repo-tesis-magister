@@ -61,7 +61,7 @@ Diseñar un simulador computacional de señales de electrocardiograma basado en 
 
 \item Calibrar los parámetros del modelo mediante algoritmos de optimización (L-BFGS-B \cite{byrd1995limited} con restricciones de límites) utilizando latidos reales de la base de datos MIT-BIH Arrhythmia Database como ``semilla''.
 
-\item Desarrollar un motor de reglas fisiológicas que adapte los parámetros de tiempo y voltaje según tablas de referencia clínica (Rijnbeek \cite{rijnbeek2001normal} y AHA \cite{rautaharju2009aha}) para simular pacientes sanos y enfermos.
+\item Desarrollar un motor de reglas fisiológicas que imponga a los parámetros temporales del modelo intervalos dentro de rangos normales de referencia publicados, para construir un grupo control y un grupo de sujetos con desvíos declarados respecto de esos rangos, y verificar la etiqueta de cada sujeto midiendo los intervalos sobre los parámetros generados.
 
 \item Incorporar un módulo de ritmo que genere la secuencia de intervalos entre latidos con un exponente de escalamiento declarado como parámetro de entrada, acoplarlo al modelo morfológico de forma selectiva en el tiempo, y verificar la recuperación de ese exponente sobre las series generadas.
 
