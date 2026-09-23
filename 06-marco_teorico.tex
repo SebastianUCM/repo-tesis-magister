@@ -3,7 +3,7 @@
 
 \subsection{Introducción}
 
-Este capítulo establece los fundamentos necesarios para justificar las decisiones de modelado adoptadas en esta investigación. Se organiza en cuatro bloques: los fundamentos electrofisiológicos que dan origen a la señal electrocardiográfica, los paradigmas disponibles para modelarla matemáticamente, la justificación específica del uso de funciones Gaussianas, y la discusión sobre el papel del volumen de datos y de los enfoques supervisados y no supervisados en el diagnóstico asistido.
+Este capítulo establece los fundamentos teóricos que sustentan las decisiones de modelado adoptadas en esta investigación. Se organiza en cuatro dimensiones: los fundamentos electrofisiológicos de la señal electrocardiográfica, los paradigmas disponibles para su modelado matemático, la justificación del uso de funciones Gaussianas y el rol crítico del volumen de datos en los sistemas de diagnóstico asistido.
 
 \subsection{Fundamentos electrofisiológicos de la señal electrocardiográfica}
 
@@ -15,39 +15,39 @@ La evolución del campo desde la bioelectricidad celular hasta sus aplicaciones 
 
 En el trazado de superficie, esta actividad se manifiesta como una secuencia característica de deflexiones: la onda P, correspondiente a la despolarización auricular; el complejo QRS, asociado a la despolarización ventricular; y la onda T, que refleja la repolarización ventricular. La interpretación sistemática de estas deflexiones y de los intervalos que las separan constituye una competencia clínica fundamental \cite{zumba2023evaluacion}.
 
-Resulta relevante para esta investigación que la morfología considerada normal no es única. Corrado et al. \cite{corrado2009twelve} documentan que en atletas altamente entrenados la bradicardia sinusal alcanza prevalencias de hasta el 80\%, el bloqueo auriculoventricular de primer grado el 35\% y la repolarización temprana entre el 50\% y el 80\%, sin que ello constituya patología. La frontera entre variante fisiológica y hallazgo patológico depende del contexto demográfico del sujeto, lo que anticipa la necesidad de parametrizar dicho contexto en cualquier generador de señales sintéticas.
+Resulta relevante para esta investigación que la morfología considerada normal no es única. Corrado et al. \cite{corrado2009twelve} documentan que en atletas altamente entrenados la bradicardia sinusal alcanza prevalencias de hasta el 80\%, el bloqueo auriculoventricular de primer grado el 35\% y la repolarización temprana entre el 50\% y el 80\%, sin que ello constituya patología. La frontera entre variante fisiológica y hallazgo patológico depende del contexto demográfico del sujeto, lo que subraya la necesidad de parametrizar dicho contexto en cualquier generador de señales sintéticas.
 
 \subsection{Paradigmas de modelado de la señal electrocardiográfica}
 
-La literatura ofrece tres familias de aproximaciones al modelado de señales ECG, que se distinguen por el nivel de descripción que adoptan.
+La literatura ofrece tres familias de aproximaciones al modelado de señales ECG, que se distinguen por el nivel de descripción adoptado.
 
 \subsubsection{Modelos biofísicos}
 
-Descienden directamente del formalismo de Hodgkin-Huxley \cite{hodgkin1952quantitative} y de su adaptación cardíaca \cite{noble1962modification}. Describen los mecanismos iónicos subyacentes y poseen, por tanto, el mayor poder explicativo. Su limitación para el propósito de esta investigación es doble: el costo computacional de integrar sistemas de ecuaciones diferenciales acopladas para cada latido, y el hecho de que su salida natural es el potencial de acción celular, no el trazado de superficie, cuya obtención requiere resolver adicionalmente el problema directo de la electrocardiografía.
+Descienden directamente del formalismo de Hodgkin-Huxley \cite{hodgkin1952quantitative} y de su adaptación cardíaca \cite{noble1962modification}. Describen los mecanismos iónicos subyacentes y poseen, por tanto, el mayor poder explicativo. Su limitación para el propósito de esta investigación es doble: el costo computacional de integrar sistemas de ecuaciones diferenciales acopladas para cada latido, y el hecho de que su salida natural es el potencial de acción celular y no el trazado de superficie, cuya obtención requiere resolver adicionalmente el problema directo de la electrocardiografía.
 
 \subsubsection{Modelos fenomenológicos dinámicos}
 
-Renuncian a describir el mecanismo celular y se concentran en reproducir la forma de la onda. El referente del área es el modelo de McSharry et al. \cite{mcsharry2003dynamical}, que genera la señal mediante un sistema de tres ecuaciones diferenciales ordinarias acopladas cuya trayectoria recorre un ciclo límite tridimensional. El modelo reproduce con realismo la variabilidad de la frecuencia cardíaca y permite prescribir el espectro de potencia de los intervalos R-R.
+Renuncian a describir el mecanismo celular para centrarse en reproducir la forma de la onda. El referente del área es el modelo de McSharry et al. \cite{mcsharry2003dynamical}, que genera la señal mediante un sistema de tres ecuaciones diferenciales ordinarias acopladas cuya trayectoria recorre un ciclo límite tridimensional. El modelo reproduce con realismo la variabilidad de la frecuencia cardíaca y permite prescribir el espectro de potencia de los intervalos R-R.
 
-Sus propios autores reconocen dos limitaciones pertinentes: la validación se apoyó en comparación visual sin reportar métricas cuantitativas de error, y los parámetros de los eventos P-QRS-T fueron derivados de análisis visual subjetivo.
+Los propios autores reconocen dos limitaciones metodológicas en su aproximación: la validación se apoyó en comparación visual sin reportar métricas cuantitativas de error, y los parámetros de los eventos P-QRS-T fueron derivados de un análisis visual subjetivo.
 
 \subsubsection{Modelos paramétricos por descomposición}
 
-Describen la señal como una combinación lineal de funciones elementales cuyos parámetros se ajustan a datos reales. Clifford et al. \cite{clifford2004model} demostraron que la descomposición mediante suma de funciones Gaussianas es computacionalmente eficiente y permite una parametrización precisa de la asimetría de las ondas, propiedad especialmente relevante para representar morfologías isquémicas en las que el segmento ST resulta crítico.
+Describen la señal como una combinación lineal de funciones elementales cuyos parámetros se ajustan a datos reales. Clifford et al. \cite{clifford2004model} demostraron que la descomposición mediante suma de funciones Gaussianas es computacionalmente eficiente y permite una parametrización precisa de la asimetría de las ondas. Esta propiedad es especialmente relevante para representar morfologías isquémicas donde la alteración del segmento ST resulta crítica.
 
 \subsection{Justificación del uso de funciones Gaussianas}
 
-La elección de la función Gaussiana como primitiva morfológica no es arbitraria, y conviene explicitar los cinco argumentos que la sostienen frente a las alternativas disponibles.
+La elección de la función Gaussiana como primitiva morfológica se sustenta en cinco argumentos metodológicos frente a las alternativas disponibles:
 
-\textbf{Correspondencia con la forma de la señal.} Cada deflexión del ciclo P-QRS-T es un pulso unimodal, con un máximo bien definido y decaimiento a ambos lados. La Gaussiana es la función más simple que reproduce esa forma con únicamente tres parámetros, y presenta la ventaja de que cada uno posee interpretación fisiológica directa: la amplitud corresponde al voltaje de la deflexión, la posición al instante del evento eléctrico dentro del ciclo, y el ancho a su duración. Un ajuste de la onda R no produce coeficientes abstractos, sino magnitudes que un cardiólogo puede evaluar.
+\textbf{Correspondencia anatómico-funcional.} Cada deflexión del ciclo P-QRS-T es un pulso unimodal, con un máximo definido y decaimiento lateral. La Gaussiana es la función más simple que reproduce esta forma con tres parámetros de interpretación fisiológica directa: la amplitud corresponde al voltaje de la deflexión, la posición indica el instante del evento eléctrico, y el ancho representa su duración. Su ajuste produce magnitudes directamente evaluables desde la práctica clínica.
 
-\textbf{Continuidad con el estándar del área.} El modelo de McSharry et al. \cite{mcsharry2003dynamical}, referente de la simulación de ECG, emplea internamente términos Gaussianos como forzamiento angular para generar la morfología P-QRS-T. Las Gaussianas ya son la primitiva morfológica del modelo dinámico de referencia. Adoptarlas directamente conserva esa base morfológica y elimina el costo de integrar el sistema de ecuaciones diferenciales, lo cual resulta determinante cuando el objetivo es generar volúmenes elevados de latidos.
+\textbf{Continuidad con el estándar del área.} El modelo dinámico de referencia \cite{mcsharry2003dynamical} emplea términos Gaussianos como forzamiento angular para generar la morfología P-QRS-T. Adoptar esta base conserva la estructura morfológica validada en la literatura, eliminando simultáneamente el costo de integración del sistema de ecuaciones diferenciales.
 
-\textbf{Ventaja frente a otras bases de descomposición.} Las bases ortogonales de propósito general, como las wavelets o los polinomios por tramos, permiten aproximar la señal con error arbitrariamente pequeño, pero sus coeficientes carecen de significado clínico: no existe un coeficiente wavelet que corresponda a la amplitud de la onda R. Dado que el propósito de esta investigación es generar señales con control fisiológico explícito, y no meramente comprimirlas o reconstruirlas, la interpretabilidad de los parámetros constituye un requisito y no una preferencia estética.
+\textbf{Interpretabilidad frente a bases ortogonales.} Las bases de propósito general (wavelets, polinomios por tramos) minimizan el error de aproximación, pero sus coeficientes carecen de significado clínico. Dado que el objetivo es generar señales con control explícito, la interpretabilidad fisiológica de cada parámetro constituye un requisito técnico ineludible.
 
-\textbf{Ventaja frente a los enfoques basados en redes neuronales informadas por la física.} Las Physics Informed Neural Networks constituyen una alternativa contemporánea para incorporar restricciones físicas al aprendizaje \cite{sophiya2025pinns}. Su aplicabilidad al problema abordado es limitada: requieren disponer de la ecuación diferencial que gobierna el fenómeno, y el ECG de superficie no admite una formulación compacta equivalente. La literatura reporta además dificultades de convergencia y un elevado costo computacional en problemas de alta dimensión.
+\textbf{Eficiencia frente a redes neuronales informadas por la física (PINNs).} Aunque las PINNs \cite{sophiya2025pinns} incorporan restricciones físicas al aprendizaje, requieren disponer de la ecuación diferencial gobernante. Dado que el ECG de superficie no admite una formulación compacta equivalente, y sumado a las dificultades de convergencia en alta dimensión, su aplicabilidad es subóptima para este problema.
 
-\textbf{Extensión a la Gaussiana asimétrica.} La Gaussiana clásica es simétrica respecto de su centro, mientras que las deflexiones reales no lo son: la onda T presenta característicamente una fase ascendente más lenta que la descendente. Permitir anchos diferenciados a cada lado del centro captura esta propiedad al costo de un único parámetro adicional por onda, conservando la interpretabilidad del resto.
+\textbf{Extensión asimétrica.} Las deflexiones reales presentan asimetrías características (ej. fase ascendente lenta en la onda T). La Gaussiana asimétrica captura esta propiedad añadiendo un único parámetro adicional por onda (anchos diferenciados respecto al centro), sin comprometer la interpretabilidad del conjunto.
 
 \subsection{El volumen de datos como limitante del diagnóstico asistido}
 
