@@ -58,14 +58,59 @@ Para que las señales sean realistas, los parámetros del modelo se ajustan auto
     \item \textbf{Algoritmo:} Se utiliza el método \textbf{L-BFGS-B} \cite{byrd1995limited}, permitiendo establecer límites fisiológicos estrictos a los parámetros para evitar artefactos biológicamente imposibles.
 \end{enumerate}
 
-\subsection{Motor de Reglas Fisiológicas y Variabilidad}
+\subsection{Motor de reglas fisiológicas}\label{sec:reglas}
 
-El diseño contempla, para la etapa siguiente del plan de trabajo, un motor de reglas basado en estándares clínicos que permita generar dos grupos etiquetados:
+El modelo ajustado a latidos reales produce latidos morfológicamente correctos, pero parecidos entre sí: reproduce la forma de los latidos del registro, no la variación entre sujetos. Un conjunto así no permite entrenar ni evaluar un clasificador, porque no contiene dos clases que separar. El motor de reglas fisiológicas es la pieza que introduce esa variación de forma controlada, y responde al tercer objetivo específico de este trabajo.
 
-\begin{itemize}
-    \item \textbf{Grupo control (sanos):} Ajuste automático de los intervalos (PR, QRS, QT) y de las amplitudes dentro de los rangos normales de referencia establecidos por las tablas de Rijnbeek \cite{rijnbeek2001normal} y la AHA \cite{rautaharju2009aha}, con una serie de intervalos R-R cuyo exponente de escalamiento corresponde al régimen reportado para sujetos sanos.
-    \item \textbf{Grupo de enfermos:} Desvío controlado de esos mismos parámetros fuera de los rangos normales de referencia, acompañado de una serie de intervalos R-R con exponente de escalamiento degradado. La etiqueta es de construcción y no diagnóstica: registra cómo se generó el sujeto sintético, no una condición clínica atribuida.
-\end{itemize}
+\subsubsection{Rangos normales de referencia}
+
+Los rangos dentro de los cuales se genera el grupo control provienen de Palhares et al.\ \cite{palhares2017normal}, que reporta los límites normales del electrocardiograma sobre 486.014 registros digitales de doce derivaciones de atención primaria, con una edad media de 42,2 $\pm$ 18,6 años y un 58,8\,\% de mujeres, tras excluir a los pacientes con comorbilidades declaradas, con terapia farmacológica o con códigos de Minnesota anormales. Se eligió esa serie por su tamaño, por haberse obtenido en población latinoamericana y por reportar sus valores por sexo y grupo de edad. El estudio define el rango normal como el intervalo entre los percentiles 2 y 98 de cada variable —\emph{«The 2nd percentile was taken as the lower limit and the 98th percentile as the upper limit of the normal range»}—, y es esa definición la que adopta este trabajo. De sus Tablas 3 y 4 se transcribieron los percentiles 2 y 98 de la duración de la onda P, el intervalo PR, la duración del complejo QRS y el intervalo QT, y los 112 valores transcritos se cotejaron celda por celda contra el documento original.
+
+El alcance de este trabajo distingue únicamente entre sujetos sanos y enfermos: la variación por sexo y por edad queda como trabajo futuro. Palhares et al.\ no publican, sin embargo, rangos agregados, sino por estrato, de modo que todo sujeto se genera con un mismo estrato de referencia. El elegido es el de hombres de 60 a 69 años, porque es el del sujeto del que proviene la morfología: la cabecera del registro 100 de la MIT-BIH \cite{moody2001impact} declara un hombre de 69 años. Con esa elección, la plantilla morfológica y los rangos de referencia corresponden a una misma población, y cada rango es un valor directo de la tabla publicada, sin combinación ni derivación alguna. Los rangos resultantes son de 114 a 216~ms para el intervalo PR, de 76 a 114~ms para el QRS, de 338 a 472~ms para el QT y de 82 a 140~ms para la duración de la onda P.
+
+\subsubsection{Del intervalo clínico al parámetro del modelo}
+
+Una función gaussiana no tiene principio ni fin, de modo que medir un intervalo sobre el modelo exige elegir un criterio. Este trabajo adopta la convención de $k$ desviaciones estándar, con $k = 2$:
+
+\begin{equation}
+\text{inicio de una onda} = b - k\,c^{\text{asc}}, \qquad
+\text{fin de una onda} = b + k\,c^{\text{desc}},
+\end{equation}
+donde $b$ es la posición del centro de la onda y $c^{\text{asc}}$ y $c^{\text{desc}}$ los anchos de sus ramas. Con $k = 2$ cada rama abarca cerca del 95\,\% de su área. La elección es una decisión de modelado y no un hecho: con $k = 3$ los mismos parámetros producen intervalos más largos, de modo que el valor se declara junto a todo resultado que dependa de él. Con esa convención, el intervalo PR se mide entre el inicio de la onda P y el inicio del complejo QRS, la duración del QRS entre el inicio de la onda Q y el fin de la onda S, y el intervalo QT entre el inicio del QRS y el fin de la onda T.
+
+La operación inversa, que impone un intervalo dado reescalando los parámetros, es la que construye cada sujeto. Ambas operaciones son inversas entre sí: medir un sujeto generado devuelve los valores que se le pidieron, con un error máximo del orden de $10^{-14}$~ms, atribuible a la aritmética de punto flotante.
+
+\subsubsection{Rasgos impuestos y rasgos desviables}
+
+El motor distingue dos conjuntos de rasgos, y la distinción responde al respaldo bibliográfico de cada uno. A todo sujeto se le \emph{imponen} cinco rasgos: el intervalo PR, la duración del QRS, el intervalo QT y las duraciones de las ondas P y T. Para construir un sujeto del grupo de enfermos se puede \emph{desviar} solo alguno de los cuatro primeros, que son exactamente los que tienen su rango cotejado contra la fuente primaria.
+
+La duración de la onda T se impone siempre, pero no se desvía nunca. Se impone porque sin ella la morfología se rompe: la plantilla, que es la mediana de los parámetros ajustados, hereda el ancho descendente de la onda T fijado por su cota (Subsección~\ref{sec:residuo}), y en una prueba sin reescalarlo el centro de la onda T del sujeto generado cayó 75~ms \emph{antes} del pico R. No se desvía porque su rango de referencia no tiene fuente primaria. La amplitud de la onda P, por la misma razón, no se impone ni se desvía: cada sujeto hereda la de la plantilla, 0,105 veces la amplitud de la onda R, medida sobre los latidos reales del ajuste. La contrapartida es que esa amplitud es constante en toda la cohorte.
+
+\subsubsection{Construcción de las dos clases}
+
+Un sujeto del \textbf{grupo control} se genera sorteando cada rasgo impuesto de manera uniforme dentro de su rango normal. Un sujeto del \textbf{grupo de enfermos} se genera sorteando uno de los rasgos desviables y llevándolo fuera de su rango, por arriba o por abajo, en una magnitud igual al 25\,\% del ancho del propio rango; el resto de sus rasgos se sortea dentro del rango normal. La magnitud del desvío es fija, de modo que cada rasgo desviado toma uno de dos valores posibles: su límite inferior menos esa magnitud, o su límite superior más ella.
+
+Las etiquetas son \emph{de construcción} y no diagnósticas. Un sujeto queda marcado como enfermo porque uno de sus parámetros se generó deliberadamente fuera del rango de referencia, y el motor registra cuál fue y en cuánto se desvió. Esa trazabilidad es la ventaja concreta de un generador paramétrico: en un conjunto de datos real las causas de una anomalía no se pueden separar, mientras que aquí cada sujeto trae anotada la suya.
+
+Las etiquetas se construyen exclusivamente sobre intervalos morfológicos. El exponente de escalamiento del ritmo no interviene en ellas: el módulo de ritmo se valida por separado, como generador de un exponente prescrito, y el uso de un exponente degradado para caracterizar un grupo de enfermos queda como trabajo futuro.
+
+\subsubsection{El intervalo QT no está corregido por frecuencia}
+
+Los valores de QT que impone el motor son intervalos \textbf{sin corregir}, referidos a un intervalo R-R de 850~ms. Los umbrales clínicos de QT prolongado que suelen citarse se definen sobre el QT \emph{corregido} por frecuencia cardíaca: Rautaharju et al.\ \cite{rautaharju2009aha} recomiendan considerar prolongado \emph{«the adjusted QT of 460 ms or longer in women and 450 ms or longer in men»}. Comparar los valores de este motor contra esos umbrales es comparar dos magnitudes distintas.
+
+De ello se sigue algo que conviene enunciar antes de que se lea como un defecto: una fracción de los sujetos del grupo control presenta intervalos QT por encima de 450~ms. No es un error de etiquetado. Un percentil 98 de una población sana y un umbral clínico de decisión son objetos diferentes y no tienen por qué coincidir; el propio Rautaharju presenta sus límites como \emph{«a practical compromise»}. Este trabajo no calcula ningún QT corregido: hacerlo exigiría elegir entre las fórmulas de corrección disponibles, y esa elección cambia el resultado y requiere una justificación propia.
+
+\subsubsection{Verificación}
+
+El motor incorpora un modo de verificación que mide los intervalos sobre los parámetros efectivamente generados y los contrasta contra lo que se pidió. Se comprueban cinco condiciones: que cada rasgo impuesto se haya cumplido con un error inferior a 1~ms; que ningún sujeto del grupo control tenga un rasgo impuesto fuera de su rango; que todo sujeto del grupo de enfermos tenga su rasgo desviado fuera de él; que la onda T no se solape con el complejo QRS; y que el centro de la onda T quede dentro de la ventana de extracción. Los resultados se reportan en la Subsección~\ref{sec:cohorte}.
+
+\subsubsection{Limitaciones declaradas}
+
+La duración de la onda T se impone a todo sujeto a partir de un rango de uso clínico corriente, de 120 a 200~ms, que no tiene fuente primaria en este trabajo: Palhares et al.\ no informan la duración de la onda T separada del intervalo QT. La posición del centro de la onda T tampoco tiene un rango de referencia, y por eso no se usa como criterio de verificación más allá de que caiga dentro de la ventana.
+
+La morfología proviene de un sujeto medicado. La cabecera del registro 100 lista metildopa y propranolol, este último un betabloqueador, mientras que la población de Palhares et al.\ excluye a todo paciente con terapia farmacológica.
+
+El motor no simula morfologías arrítmicas: no reproduce la elevación del segmento ST ni la fibrilación auricular con anulación de la onda P. Modifica intervalos dentro de la estructura P-QRS-T de un latido sinusal, y todo lo que quede fuera de esa estructura queda declarado como trabajo futuro.
 
 
 \subsection{Metodología de validación de los datos generados}
@@ -127,7 +172,7 @@ Como control adicional del procedimiento de optimización se verifica, para cada
 
 \subsubsection{Alcance de la validación}
 
-La validación descrita se aplica a señales de ritmo sinusal normal. La evaluación de señales con variabilidad demográfica parametrizada o con alteraciones patológicas requerirá criterios adicionales, específicamente el contraste de los intervalos generados contra los rangos de referencia clínicos de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha}, y queda fuera del alcance de la presente etapa.
+La validación descrita se aplica a la morfología de señales de ritmo sinusal normal. Los sujetos que produce el motor de reglas se validan con un criterio propio, descrito en la Subsección~\ref{sec:reglas}: se miden los intervalos sobre los parámetros efectivamente generados y se contrastan contra el rango que se le pidió al motor, de modo que la etiqueta de cada sujeto quede respaldada por una medición y no por la intención con que se generó. La evaluación de morfologías arrítmicas requiere criterios adicionales y queda fuera del alcance de la presente etapa.
 
 \subsection{Módulo de ritmo y acoplamiento con la morfología}
 

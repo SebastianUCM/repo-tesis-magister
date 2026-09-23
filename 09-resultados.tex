@@ -214,6 +214,29 @@ reportaría como equivalentes; difieren únicamente en la organización temporal
 sus fluctuaciones, que es la dimensión que el exponente captura y que esos
 índices no ven.
 
+\subsection{Motor de reglas fisiológicas: cohorte etiquetada}\label{sec:cohorte}
+
+Se generó una cohorte de 500 sujetos sanos y 500 enfermos con el motor descrito en la Subsección~\ref{sec:reglas}, con semilla 0, sobre la plantilla morfológica de los 2.237 latidos ajustados y en el estrato de referencia de hombres de 60 a 69 años. El archivo de la cohorte registra la semilla, el estrato, el conjunto de parámetros de origen, la geometría de la ventana y el entorno de cálculo, de modo que puede regenerarse exactamente.
+
+El Cuadro~\ref{tab:cohorte} resume la verificación. Ninguna de las cinco condiciones falla en ninguno de los mil sujetos.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{9cm}|c|}
+\hline
+\textbf{Condición verificada} & \textbf{Sujetos que la incumplen} \\ \hline
+Rasgo impuesto con error mayor a 1 ms & 0 de 1.000 \\ \hline
+Sujeto sano con un rasgo impuesto fuera de su rango & 0 de 500 \\ \hline
+Sujeto enfermo con su rasgo desviado dentro del rango & 0 de 500 \\ \hline
+Onda T solapada con el complejo QRS & 0 de 1.000 \\ \hline
+Centro de la onda T fuera de la ventana de extracción & 0 de 1.000 \\ \hline
+\end{tabular}
+\caption{Verificación de la cohorte de 500 sujetos sanos y 500 enfermos, medida sobre los parámetros efectivamente generados.}
+\label{tab:cohorte}
+\end{table}
+
+En el grupo de enfermos, el rasgo desviado se distribuyó entre 131 sujetos por el intervalo PR, 132 por la duración del QRS, 130 por el intervalo QT y 107 por la duración de la onda P. En el grupo control, los intervalos medidos cubren los rangos de referencia completos: el PR va de 114,0 a 216,0~ms, el QRS de 76,0 a 113,9~ms y el QT de 338,6 a 471,5~ms. Este último alcanza valores por encima de 450~ms sin que ello constituya un error de etiquetado, por las razones expuestas en la Subsección~\ref{sec:reglas}: se trata de QT sin corregir por frecuencia. El centro de la onda T de los sujetos sanos se ubica entre 122 y 316~ms después del pico R; en ausencia de un rango de referencia para esa posición, la cifra se informa como observación y no como criterio de validez.
+
 \subsection{Alcance efectivo respecto a los resultados proyectados}
 
 Por transparencia metodológica, el Cuadro \ref{tab:alcance} contrasta los resultados proyectados en la propuesta de esta investigación con lo efectivamente alcanzado hasta la fecha.
@@ -226,7 +249,7 @@ Por transparencia metodológica, el Cuadro \ref{tab:alcance} contrasta los resul
 Framework de generación paramétrica en Python & Implementado y funcional para latidos sinusales normales \\ \hline
 Validación de fidelidad frente a MIT-BIH & Realizada sobre 1 registro de los 48 de la base \\ \hline
 Dataset de al menos 5.000 latidos sintéticos & 2.237 latidos parametrizados, más una cohorte de 50 series de 24 horas \\ \hline
-Motor de reglas fisiológicas para grupo control y grupo de enfermos & No implementado \\ \hline
+Motor de reglas fisiológicas para grupo control y grupo de enfermos & Implementado y verificado sobre una cohorte de 500 sanos y 500 enfermos, en un estrato de referencia fijo \\ \hline
 Validación del conjunto sintético con red neuronal preentrenada & No realizada \\ \hline
 Publicación en revista indexada & Pendiente \\ \hline
 \end{tabular}
@@ -234,7 +257,7 @@ Publicación en revista indexada & Pendiente \\ \hline
 \label{tab:alcance}
 \end{table}
 
-El motor de reglas fisiológicas basado en las tablas de Rijnbeek \cite{rijnbeek2001normal} y de la AHA \cite{rautaharju2009aha}, del que depende la distinción entre el grupo control y el grupo de enfermos, así como la validación del conjunto sintético mediante un modelo preentrenado, quedan fuera del alcance validado en esta etapa. En consecuencia, las conclusiones sobre fidelidad que se presentan a continuación son válidas para ritmo sinusal normal en población adulta, y no son extrapolables a sujetos con parámetros fuera de rango normal sin validación adicional.
+El motor de reglas fisiológicas se implementó y verificó con dos restricciones de alcance: opera sobre un único estrato de referencia, sin variar el sexo ni la edad, y construye sus etiquetas solo sobre intervalos morfológicos, sin intervención del exponente de escalamiento del ritmo. La validación del conjunto sintético mediante un modelo preentrenado queda fuera del alcance de esta etapa. En consecuencia, las conclusiones sobre fidelidad morfológica son válidas para ritmo sinusal normal, y las etiquetas del motor describen cómo se construyó cada sujeto, no una condición clínica.
 
 \subsection{Resultados de responsabilidad social}
 
