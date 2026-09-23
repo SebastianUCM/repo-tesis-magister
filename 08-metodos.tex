@@ -21,19 +21,32 @@ Para garantizar la reproducibilidad y eficiencia del generador se utilizaron los
     \item \textbf{Hardware}: Estación de trabajo con procesador multi-núcleo y un mínimo de 8 GB de RAM, suficiente para la ejecución de modelos paramétricos gaussianos.
 \end{itemize}
 
+Los resultados reportados se obtuvieron con Python 3.12.4, NumPy 2.1.3 y SciPy 1.16.0. Registrar las versiones no es una formalidad. El ajuste morfológico es determinista: no interviene ningún muestreo aleatorio y el optimizador parte de un punto fijo por latido, de modo que repetir el ajuste en el mismo entorno reproduce exactamente todos los parámetros. El módulo de ritmo sí emplea números aleatorios, y recibe la semilla como parámetro explícito. Sin embargo, al reajustar los mismos latidos con versiones distintas de las bibliotecas de cálculo, L-BFGS-B converge a puntos ligeramente diferentes: sobre los primeros cuarenta latidos del registro, el error cuadrático medio difirió en torno al 1\,\%, en una dirección u otra según el latido. El procedimiento es, por lo tanto, determinista dentro de un entorno y no entre entornos. Por esa razón cada archivo de métricas que produce el pipeline registra el entorno con que se generó.
+
 \subsection{Diseño del Modelo de Generación}
 
 El núcleo del generador se basa en el Modelado Fenomenológico Paramétrico, que describe la señal ECG como una combinación lineal de funciones matemáticas.
 
 \subsubsection{Modelo de Gaussianas Asimétricas}
 
-Cada ciclo cardíaco (latido) se modela mediante la superposición de cinco funciones Gaussianas, correspondientes a las ondas P, Q, R, S y T. La señal sintética $x(t)$ se define mediante la ecuación:
+Cada ciclo cardíaco (latido) se modela mediante la superposición de cinco funciones gaussianas asimétricas, correspondientes a las ondas P, Q, R, S y T, más un término de línea base afín. La señal sintética $x(t)$ se define como:
 
 \begin{equation}
-    x(t) = \sum_{i \in \{P,Q,R,S,T\}} a_i \cdot \exp \left( -\frac{(t - b_i)^2}{2c_i^2} \right)
+    x(t) = \sum_{i \in \{P,Q,R,S,T\}} a_i \exp\!\left( -\frac{(t - b_i)^2}{2\,c_i(t)^2} \right) \;+\; \beta_0 + \beta_1\,(t - t_R)
+\end{equation}
+donde el ancho de cada onda depende del lado de su centro en que se evalúe:
+
+\begin{equation}
+    c_i(t) =
+    \begin{cases}
+        c_i^{\text{asc}} & \text{si } t < b_i \\[2pt]
+        c_i^{\text{desc}} & \text{si } t \geq b_i
+    \end{cases}
 \end{equation}
 
-Donde cada componente es controlada por parámetros explícitos de amplitud ($a_i$), posición temporal ($b_i$) y ancho o desviación estándar ($c_i$). Para capturar la asimetría real de ondas como la T, se implementa un parámetro de modulación que permite anchos diferenciados para la fase ascendente y descendente de la curva.
+Cada onda queda descrita por cuatro parámetros explícitos: su amplitud ($a_i$), la posición de su centro ($b_i$) y los anchos de sus ramas ascendente ($c_i^{\text{asc}}$) y descendente ($c_i^{\text{desc}}$). El término de línea base aporta dos más, el desnivel $\beta_0$ y la pendiente $\beta_1$, referidos al instante $t_R$ del pico R. El total es de veintidós parámetros por latido.
+
+La asimetría no es un refinamiento estético. La onda T sube más rápido de lo que baja, y una gaussiana simétrica no puede representar esa forma por sí sola: hacerlo exigiría superponer una segunda onda, con tres parámetros más sin significado fisiológico propio. Con dos anchos por onda, la asimetría se describe con un único parámetro adicional que conserva una interpretación directa.
 
 \subsection{Proceso de Optimización Numérica}
 
@@ -41,7 +54,7 @@ Para que las señales sean realistas, los parámetros del modelo se ajustan auto
 
 \begin{enumerate}
     \item \textbf{Extracción de Semillas:} Selección de latidos representativos de la base MIT-BIH.
-    \item \textbf{Función Objetivo:} Minimización del Error Cuadrático Medio (RMSE) entre la señal real ($y$) y la sintética generada ($x$).
+    \item \textbf{Función Objetivo:} Minimización del error cuadrático medio (MSE) entre la señal real ($y$) y la sintética generada ($x$). Se minimiza el MSE y se reporta su raíz, el RMSE, por las razones que se detallan en la Subsección \ref{sec:metricas}.
     \item \textbf{Algoritmo:} Se utiliza el método \textbf{L-BFGS-B} \cite{byrd1995limited}, permitiendo establecer límites fisiológicos estrictos a los parámetros para evitar artefactos biológicamente imposibles.
 \end{enumerate}
 
@@ -66,13 +79,13 @@ La unidad de validación es el latido individual. Cada señal sintética se comp
 El procedimiento consta de cuatro etapas:
 
 \begin{enumerate}
-    \item \textbf{Selección de semillas.} Extracción de los latidos anotados como sinusales normales (símbolo \texttt{N}) del registro, descartando latidos ectópicos, artefactos y marcas de ritmo.
-    \item \textbf{Segmentación y normalización.} Ventana de 128 muestras centrada en el pico R anotado y normalización mediante puntuación Z, de modo que las métricas resulten independientes de la ganancia del canal y comparables entre registros.
-    \item \textbf{Ajuste.} Optimización independiente de los veinte parámetros del modelo para cada latido, minimizando el error cuadrático medio mediante L-BFGS-B \cite{byrd1995limited} con restricciones de caja fisiológicas.
+    \item \textbf{Selección de semillas.} Extracción de los latidos anotados como sinusales normales (símbolo \texttt{N}) del registro, descartando latidos ectópicos, artefactos y marcas de ritmo. Del registro 100 se obtienen así 2.237 latidos de las 2.239 anotaciones normales. Los dos restantes se descartan por motivos distintos: la primera y la última anotación del registro no se consideran, como precaución frente a los bordes, y un latido se excluye porque su ventana de extracción comienza antes del inicio de la señal.
+    \item \textbf{Segmentación y normalización.} Ventana asimétrica respecto del pico R anotado, de 250 ms antes y 500 ms después, es decir 270 muestras a la frecuencia de muestreo de 360 Hz del registro. La asimetría se sigue de la fisiología del complejo P-QRS-T, y el efecto de haber reemplazado la ventana centrada que se empleó en una iteración anterior se cuantifica en la Subsección \ref{sec:validez}. Cada latido se normaliza mediante puntuación Z, de modo que las métricas resulten independientes de la ganancia del canal y comparables entre registros.
+    \item \textbf{Ajuste.} Optimización independiente de los veintidós parámetros del modelo para cada latido, minimizando el error cuadrático medio mediante L-BFGS-B \cite{byrd1995limited} con restricciones de caja fisiológicas.
     \item \textbf{Evaluación.} Cálculo de las métricas sobre el par formado por el latido real y su reconstrucción sintética.
 \end{enumerate}
 
-\subsubsection{Métricas empleadas y justificación de su elección}
+\subsubsection{Métricas empleadas y justificación de su elección}\label{sec:metricas}
 
 Se emplean dos métricas complementarias, cuya combinación responde a que ninguna resulta suficiente por separado.
 
@@ -82,7 +95,7 @@ La \textbf{correlación de Pearson} evalúa la concordancia morfológica entre a
 r = \frac{\sum_{i=1}^{N}(y_i - \bar{y})(x_i - \bar{x})}{\sqrt{\sum_{i=1}^{N}(y_i - \bar{y})^2}\sqrt{\sum_{i=1}^{N}(x_i - \bar{x})^2}}
 \end{equation}
 
-donde $y$ denota la señal real, $x$ la sintética y $N = 128$ el número de muestras. Se selecciona porque el objetivo primario del generador es reproducir la forma del ciclo P-QRS-T. Su limitación conocida es la invarianza ante transformaciones afines, motivo por el cual no se reporta de forma aislada.
+donde $y$ denota la señal real, $x$ la sintética y $N = 270$ el número de muestras de la ventana. Se selecciona porque el objetivo primario del generador es reproducir la forma del ciclo P-QRS-T. Su limitación conocida es la invarianza ante transformaciones afines, motivo por el cual no se reporta de forma aislada.
 
 El \textbf{error cuadrático medio y su raíz} cuantifican la discrepancia punto a punto:
 
@@ -105,7 +118,7 @@ Se establecen los siguientes criterios, definidos con anterioridad a la ejecuci�
 \begin{itemize}
     \item Correlación de Pearson media superior a 0,95, con desviación estándar inferior a 0,05.
     \item Al menos el 90\% de los latidos con correlación individual superior a 0,95.
-    \item Ausencia de latidos con parámetros fuera de los rangos fisiológicos definidos.
+    \item Ausencia de latidos con parámetros fuera de los rangos fisiológicos definidos. Un parámetro que converge exactamente sobre su cota se considera dentro del rango, pero no se da por determinado por los datos: esa situación se cuantifica aparte, mediante el control de saturación que se describe a continuación.
 \end{itemize}
 
 \subsubsection{Verificación de saturación de las restricciones}
@@ -152,13 +165,24 @@ fuera del rango que un generador de ruido gaussiano fraccional puede producir.
 \subsubsection{Medición del exponente}
 
 El exponente de la serie generada se mide con una implementación propia del DFA,
-según el procedimiento de Peng et al.\ \cite{peng1995quantification}. Se
-excluyen las ventanas menores a dieciséis muestras, porque a esa escala el
-estimador sobreestima el exponente incluso sobre series construidas sin memoria,
-de modo que incluirlas produciría correlaciones inexistentes. Se reportan además
-$\alpha_1$ y $\alpha_2$ por tramos, dado que el cruce de pendiente descrito en
-la literatura hace que un único exponente global pueda ocultar comportamientos
-distintos en escalas cortas y largas.
+según el procedimiento de Peng et al.\ \cite{peng1995quantification}. El
+exponente global se estima sobre ventanas de dieciséis muestras en adelante,
+porque por debajo de esa escala el estimador sobreestima el exponente incluso
+sobre series construidas sin memoria.
+
+Se reportan además los exponentes por tramos de uso clínico, $\alpha_1$ sobre
+ventanas de 4 a 16 latidos y $\alpha_2$ sobre ventanas de 16 a 64, dado que el
+cruce de pendiente descrito en la literatura hace que un único exponente global
+pueda ocultar comportamientos distintos en escalas cortas y largas. El primero
+se reporta junto a su sesgo, porque se calcula precisamente en el rango de
+escalas donde el estimador sobreestima. Medido con esta misma implementación
+sobre ruido gaussiano de exponente verdadero 0,5, con sesenta repeticiones por
+cada largo de serie, $\alpha_1$ arroja valores entre 0,587 y 0,591 para series
+de 512 a 32.768 puntos. El sesgo es de aproximadamente $+0{,}09$ y no disminuye
+con el largo del registro, de modo que es atribuible al estimador en ventanas de
+pocos puntos y no a la serie. Se conserva el rango de 4 a 16 por ser la
+convención clínica, pero ningún valor de $\alpha_1$ se informa sin esa
+advertencia.
 
 \subsubsection{Acoplamiento selectivo en el tiempo}
 
