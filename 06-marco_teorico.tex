@@ -33,13 +33,13 @@ Dos aspectos metodológicos de ese trabajo son relevantes aquí: los instantes y
 
 Describen la señal como una combinación lineal de funciones elementales cuyos parámetros se ajustan a datos reales. Clifford \cite{clifford2004model} mostró que la descomposición mediante suma de funciones gaussianas es computacionalmente eficiente y permite parametrizar la asimetría de las ondas, propiedad que el autor vincula con la representación de alteraciones del segmento ST.
 
-\subsection{Justificación del uso de funciones Gaussianas}
+\subsection{Justificación del uso de funciones gaussianas}
 
 La elección de la función gaussiana como primitiva morfológica se sustenta en cinco argumentos metodológicos frente a las alternativas disponibles.
 
 \textbf{Correspondencia anatómico-funcional.} Cada deflexión del ciclo P-QRS-T es un pulso unimodal, con un máximo definido y decaimiento lateral. La gaussiana es una de las funciones más simples que reproduce esta forma con tres parámetros de interpretación fisiológica directa: la amplitud corresponde al voltaje de la deflexión, la posición indica el instante del evento eléctrico, y el ancho representa su duración. Su ajuste produce magnitudes directamente evaluables desde la práctica clínica.
 
-\textbf{Continuidad con el estándar del área.} El modelo dinámico de referencia \cite{mcsharry2003dynamical} emplea términos Gaussianos como forzamiento angular para generar la morfología P-QRS-T. Adoptar esta base conserva la estructura morfológica validada en la literatura, eliminando simultáneamente el costo de integración del sistema de ecuaciones diferenciales.
+\textbf{Continuidad con el estándar del área.} El modelo dinámico de referencia \cite{mcsharry2003dynamical} emplea términos gaussianos como forzamiento angular para generar la morfología P-QRS-T. Adoptar esta base conserva la estructura morfológica validada en la literatura, eliminando simultáneamente el costo de integración del sistema de ecuaciones diferenciales.
 
 \textbf{Interpretabilidad frente a bases ortogonales.} Las bases de propósito general (wavelets, polinomios por tramos) minimizan el error de aproximación, pero sus coeficientes carecen de significado clínico. Dado que el objetivo es generar señales con control explícito, la interpretabilidad fisiológica de cada parámetro es un requisito de diseño.
 

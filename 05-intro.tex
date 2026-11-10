@@ -39,7 +39,7 @@ Este trabajo parametriza el ritmo mediante el exponente $\alpha$ del DFA y no me
 
 \subsection{Hipótesis}
 
-Es posible construir un generador de señales ECG sintéticas basado en la superposición de funciones Gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo la parametrización controlada de variables distinguiendo entre sujetos sanos y enfermos.
+Es posible construir un generador de señales ECG sintéticas basado en la superposición de funciones gaussianas y optimización numérica que reproduzca la morfología de señales reales con alta fidelidad estructural, permitiendo la parametrización controlada de variables distinguiendo entre sujetos sanos y enfermos.
 
 Complementariamente, se plantea que es posible dotar a este generador de una dinámica latido a latido cuyo exponente de escalamiento sea un parámetro de entrada. Esta segunda proposición es verificable de manera independiente de la primera, y su verificación no descansa en la indistinguibilidad respecto de una serie real sino en la medición de una propiedad declarada.
 
@@ -47,13 +47,13 @@ Complementariamente, se plantea que es posible dotar a este generador de una din
 
 \subsubsection{Objetivo general}
 
-Diseñar un simulador computacional de señales de electrocardiograma basado en un modelo matemático paramétrico de Gaussianas asimétricas, capaz de generar conjuntos de datos sintéticos etiquetados para un grupo control de sujetos sanos y un grupo de sujetos enfermos.
+Diseñar un simulador computacional de señales de electrocardiograma basado en un modelo matemático paramétrico de gaussianas asimétricas, capaz de generar conjuntos de datos sintéticos etiquetados para un grupo control de sujetos sanos y un grupo de sujetos enfermos.
 
 \subsubsection{Objetivos específicos}
 
 \begin{enumerate}
 
-\item Implementar el modelo matemático de suma de Gaussianas asimétricas para la representación morfológica del ciclo cardíaco P-QRS-T.
+\item Implementar el modelo matemático de suma de gaussianas asimétricas para la representación morfológica del ciclo cardíaco P-QRS-T.
 
 \item Calibrar los parámetros del modelo mediante algoritmos de optimización (L-BFGS-B \cite{byrd1995limited} con restricciones de límites) utilizando latidos reales de la base de datos MIT-BIH Arrhythmia Database como \emph{semilla}.
 

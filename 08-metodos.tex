@@ -27,7 +27,7 @@ Los resultados reportados se obtuvieron con Python 3.12.4, NumPy 2.1.3 y SciPy 1
 
 El núcleo del generador es un modelo fenomenológico paramétrico, que describe la señal ECG como una combinación lineal de funciones matemáticas.
 
-\subsubsection{Modelo de Gaussianas Asimétricas}
+\subsubsection{Modelo de gaussianas Asimétricas}
 
 Cada ciclo cardíaco (latido) se modela mediante la superposición de cinco funciones gaussianas asimétricas, correspondientes a las ondas P, Q, R, S y T, más un término de línea base afín. La señal sintética $x(t)$ se define como:
 
@@ -58,7 +58,7 @@ Los parámetros del modelo se ajustan a latidos reales mediante optimización nu
     \item \textbf{Algoritmo:} se utiliza el método L-BFGS-B \cite{byrd1995limited}, que admite restricciones de caja sobre cada parámetro, con el gradiente analítico de la función objetivo y una tolerancia relativa de $10^{-9}$ sobre la función como criterio de parada.
 \end{enumerate}
 
-El punto de partida de cada latido es una plantilla fija declarada en milisegundos respecto del pico R ---centros de $-150$, $-25$, $0$, $+25$ y $+300$~ms para P, Q, R, S y T---, con las amplitudes escaladas al pico del latido y el desnivel de línea base inicializado en la mediana de los primeros y últimos 33~ms de la ventana. El Cuadro~\ref{tab:cotas} resume las restricciones de caja. Las amplitudes se expresan como fracción del valor máximo del latido normalizado, y las posiciones y anchos en milisegundos respecto del pico R; la Subsección~\ref{sec:residuo} justifica esa elección.
+El punto de partida de cada latido es una plantilla fija declarada en milisegundos respecto del pico R ---centros de $-150$, $-25$, $0$, $+25$ y $+300$~ms para P, Q, R, S y T---, con las amplitudes escaladas al pico del latido y el desnivel de línea base inicializado en la mediana de los primeros y últimos 33~ms de la ventana. El Tabla~\ref{tab:cotas} resume las restricciones de caja. Las amplitudes se expresan como fracción del valor máximo del latido normalizado, y las posiciones y anchos en milisegundos respecto del pico R; la Subsección~\ref{sec:residuo} justifica esa elección.
 
 \begin{table}[H]
 \centering
