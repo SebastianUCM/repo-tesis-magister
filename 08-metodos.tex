@@ -291,11 +291,17 @@ las correcciones alternativas de uso clínico.
 
 \subsubsection{Construcción de la señal continua}
 
-Cada latido se evalúa sobre su propio tramo de tiempo, delimitado por los puntos
-medios respecto de los picos R vecinos, y los tramos se unen con un cruce suave
-de veinte milisegundos para que la diferencia de nivel entre latidos vecinos no
-deje un escalón que el análisis espectral leería como contenido de alta
-frecuencia.
+Cada latido se evalúa sobre un soporte fijo alrededor de su pico R, desde 600~ms
+antes hasta 900~ms después, escalado por el mismo factor que las ondas P y T
+cuando el intervalo R-R supera el de referencia, y las contribuciones de todos
+los latidos se suman. Como las gaussianas son aditivas, donde la cola de la onda
+T de un latido se superpone con la onda P del siguiente ambas coexisten, como en
+la señal real. Una primera implementación evaluaba cada latido solo hasta el
+punto medio con sus vecinos y promediaba las evaluaciones en el solape; en los
+sujetos con QT prolongado eso recortaba la cola de la onda T, con diferencias de
+hasta el 3,7\,\% del rango de la señal respecto de la suma completa. La versión
+vigente coincide con la suma de cada latido evaluado sobre toda la señal con un
+error inferior a $10^{-3}$ veces el rango.
 
 La línea base recibe un tratamiento aparte. Sus dos parámetros se ajustaron
 dentro de la ventana de un latido, y extrapolar esa tendencia afín a lo largo de
@@ -304,11 +310,6 @@ En su lugar, el nivel de línea base ajustado de cada latido en su pico R se tom
 como nudo y se interpola entre latidos con un polinomio cúbico monótono por
 tramos, lo que entrega la deriva lenta y continua que caracteriza a una línea
 base real.
-
-% PENDIENTE (ronda 2): la implementación actual evalúa cada latido solo en
-% ±RR/2 y promedia en el solape, lo que recorta la cola de la onda T en QT
-% largos. Se corregirá en ecg_hurst.sintetizar (suma sobre soporte fijo) y se
-% actualizará esta descripción.
 
 \subsubsection{Criterio de validación del módulo}
 
