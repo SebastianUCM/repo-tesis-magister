@@ -3,15 +3,13 @@
 
 \subsection{Introducción}
 
-Este capítulo establece los fundamentos teóricos que sustentan las decisiones de modelado adoptadas en esta investigación. Se organiza en cuatro dimensiones: los fundamentos electrofisiológicos de la señal electrocardiográfica, los paradigmas disponibles para su modelado matemático, la justificación del uso de funciones Gaussianas y el rol crítico del volumen de datos en los sistemas de diagnóstico asistido.
+Este capítulo establece los fundamentos teóricos que sustentan las decisiones de modelado adoptadas en esta investigación. Se organiza en seis ejes: los fundamentos electrofisiológicos de la señal electrocardiográfica, los paradigmas disponibles para su modelado matemático, la justificación del uso de funciones gaussianas, el volumen de datos como limitante del diagnóstico asistido, las métricas de validación de señales sintéticas y la dinámica latido a latido.
 
 \subsection{Fundamentos electrofisiológicos de la señal electrocardiográfica}
 
 El electrocardiograma es el registro en superficie corporal de la actividad eléctrica generada por la despolarización y repolarización sucesivas del miocardio. Su base celular fue establecida por Hodgkin y Huxley \cite{hodgkin1952quantitative}, quienes formularon una descripción cuantitativa del flujo de corriente iónica a través de la membrana mediante un sistema de ecuaciones diferenciales ordinarias que relaciona las conductancias de sodio y potasio con el potencial de membrana y el tiempo.
 
 Noble \cite{noble1962modification} adaptó posteriormente dicho formalismo a las fibras de Purkinje cardíacas, cuyos potenciales de acción son de duración considerablemente mayor que los del axón de calamar originalmente estudiado, y en las que la despolarización disminuye la permeabilidad al potasio. Esta adaptación constituye el punto de partida del modelado biofísico del tejido cardíaco.
-
-La evolución del campo desde la bioelectricidad celular hasta sus aplicaciones clínicas ha sido documentada bibliométricamente por Choca et al. \cite{choca2025electrofisiologia}, quienes reportan un crecimiento sostenido de la producción científica en electrofisiología cardíaca, con un incremento notable en las últimas dos décadas.
 
 En el trazado de superficie, esta actividad se manifiesta como una secuencia característica de deflexiones: la onda P, correspondiente a la despolarización auricular; el complejo QRS, asociado a la despolarización ventricular; y la onda T, que refleja la repolarización ventricular. La interpretación sistemática de estas deflexiones y de los intervalos que las separan constituye una competencia clínica fundamental \cite{zumba2023evaluacion}.
 
@@ -29,25 +27,25 @@ Descienden directamente del formalismo de Hodgkin-Huxley \cite{hodgkin1952quanti
 
 Renuncian a describir el mecanismo celular para centrarse en reproducir la forma de la onda. El referente del área es el modelo de McSharry et al. \cite{mcsharry2003dynamical}, que genera la señal mediante un sistema de tres ecuaciones diferenciales ordinarias acopladas cuya trayectoria recorre un ciclo límite tridimensional. El modelo reproduce con realismo la variabilidad de la frecuencia cardíaca y permite prescribir el espectro de potencia de los intervalos R-R.
 
-Los propios autores reconocen dos limitaciones metodológicas en su aproximación: la validación se apoyó en comparación visual sin reportar métricas cuantitativas de error, y los parámetros de los eventos P-QRS-T fueron derivados de un análisis visual subjetivo.
+Dos aspectos metodológicos de ese trabajo son relevantes aquí: los instantes y amplitudes de los eventos P-QRS-T se fijaron a partir del análisis visual de un ECG típico de un sujeto normal, y la comparación con señales reales es cualitativa, sin métricas de error reportadas \cite{mcsharry2003dynamical}.
 
 \subsubsection{Modelos paramétricos por descomposición}
 
-Describen la señal como una combinación lineal de funciones elementales cuyos parámetros se ajustan a datos reales. Clifford et al. \cite{clifford2004model} demostraron que la descomposición mediante suma de funciones Gaussianas es computacionalmente eficiente y permite una parametrización precisa de la asimetría de las ondas. Esta propiedad es especialmente relevante para representar morfologías isquémicas donde la alteración del segmento ST resulta crítica.
+Describen la señal como una combinación lineal de funciones elementales cuyos parámetros se ajustan a datos reales. Clifford \cite{clifford2004model} mostró que la descomposición mediante suma de funciones gaussianas es computacionalmente eficiente y permite parametrizar la asimetría de las ondas, propiedad que el autor vincula con la representación de alteraciones del segmento ST.
 
 \subsection{Justificación del uso de funciones Gaussianas}
 
-La elección de la función Gaussiana como primitiva morfológica se sustenta en cinco argumentos metodológicos frente a las alternativas disponibles:
+La elección de la función gaussiana como primitiva morfológica se sustenta en cinco argumentos metodológicos frente a las alternativas disponibles.
 
-\textbf{Correspondencia anatómico-funcional.} Cada deflexión del ciclo P-QRS-T es un pulso unimodal, con un máximo definido y decaimiento lateral. La Gaussiana es la función más simple que reproduce esta forma con tres parámetros de interpretación fisiológica directa: la amplitud corresponde al voltaje de la deflexión, la posición indica el instante del evento eléctrico, y el ancho representa su duración. Su ajuste produce magnitudes directamente evaluables desde la práctica clínica.
+\textbf{Correspondencia anatómico-funcional.} Cada deflexión del ciclo P-QRS-T es un pulso unimodal, con un máximo definido y decaimiento lateral. La gaussiana es una de las funciones más simples que reproduce esta forma con tres parámetros de interpretación fisiológica directa: la amplitud corresponde al voltaje de la deflexión, la posición indica el instante del evento eléctrico, y el ancho representa su duración. Su ajuste produce magnitudes directamente evaluables desde la práctica clínica.
 
 \textbf{Continuidad con el estándar del área.} El modelo dinámico de referencia \cite{mcsharry2003dynamical} emplea términos Gaussianos como forzamiento angular para generar la morfología P-QRS-T. Adoptar esta base conserva la estructura morfológica validada en la literatura, eliminando simultáneamente el costo de integración del sistema de ecuaciones diferenciales.
 
-\textbf{Interpretabilidad frente a bases ortogonales.} Las bases de propósito general (wavelets, polinomios por tramos) minimizan el error de aproximación, pero sus coeficientes carecen de significado clínico. Dado que el objetivo es generar señales con control explícito, la interpretabilidad fisiológica de cada parámetro constituye un requisito técnico ineludible.
+\textbf{Interpretabilidad frente a bases ortogonales.} Las bases de propósito general (wavelets, polinomios por tramos) minimizan el error de aproximación, pero sus coeficientes carecen de significado clínico. Dado que el objetivo es generar señales con control explícito, la interpretabilidad fisiológica de cada parámetro es un requisito de diseño.
 
-\textbf{Eficiencia frente a redes neuronales informadas por la física (PINNs).} Aunque las PINNs \cite{sophiya2025pinns} incorporan restricciones físicas al aprendizaje, requieren disponer de la ecuación diferencial gobernante. Dado que el ECG de superficie no admite una formulación compacta equivalente, y sumado a las dificultades de convergencia en alta dimensión, su aplicabilidad es subóptima para este problema.
+\textbf{Eficiencia frente a redes neuronales informadas por la física (PINNs).} Aunque las PINNs \cite{sophiya2025pinns} incorporan restricciones físicas al aprendizaje, requieren disponer de la ecuación diferencial gobernante. El ECG de superficie no admite una formulación compacta equivalente y, según la misma revisión, varias de sus variantes presentan problemas de convergencia; por ambas razones no se adoptan en este trabajo.
 
-\textbf{Extensión asimétrica.} Las deflexiones reales presentan asimetrías características (ej. fase ascendente lenta en la onda T). La Gaussiana asimétrica captura esta propiedad añadiendo un único parámetro adicional por onda (anchos diferenciados respecto al centro), sin comprometer la interpretabilidad del conjunto.
+\textbf{Extensión asimétrica.} Las deflexiones reales no son simétricas respecto de su máximo; por ejemplo, las ramas ascendente y descendente de la onda T tienen pendientes distintas. La gaussiana asimétrica captura esta propiedad con un único parámetro adicional por onda ---anchos diferenciados a cada lado del centro--- sin comprometer la interpretabilidad del conjunto.
 
 \subsection{El volumen de datos como limitante del diagnóstico asistido}
 
@@ -89,8 +87,9 @@ El \textbf{análisis en el dominio de la frecuencia} evalúa si la señal sinté
 
 \subsection{Dinámica latido a latido y correlaciones de largo alcance}
 
-Las secciones anteriores se ocupan de la forma del latido. Esta se ocupa de su
-tiempo, que es una dimensión distinta y con su propia literatura.
+Las secciones anteriores se ocupan de la forma del latido. Esta se ocupa de la
+organización temporal de la secuencia de latidos, una dimensión distinta y con
+su propia literatura.
 
 \subsubsection{Del ideal homeostático a la dinámica fractal}
 
@@ -101,8 +100,8 @@ constante. Peng et al.\ \cite{peng1995quantification} mostraron que ocurre lo
 contrario: la serie de intervalos de un sujeto sano exhibe correlaciones de
 largo alcance propias de los sistemas dinámicos alejados del equilibrio, y en
 insuficiencia cardíaca congestiva severa ese comportamiento correlacionado se
-degrada. La variabilidad del corazón sano no es ruido superpuesto a un reloj:
-es estructura.
+degrada. La variabilidad del corazón sano no es ruido superpuesto a un ritmo
+constante, sino una fluctuación con estructura de correlación.
 
 Esa estructura tiene una consecuencia metodológica directa. Los índices que
 resumen la variabilidad en una sola cifra de dispersión —la desviación estándar
@@ -135,10 +134,12 @@ que motiva reportar dos exponentes en lugar de uno: $\alpha_1$ para las escalas
 cortas y $\alpha_2$ para las largas. La literatura clínica calcula $\alpha_1$
 sobre ventanas de menos de once latidos, y le atribuye el reflejo
 barorreceptor, mientras que $\alpha_2$ refleja los mecanismos regulatorios que
-acotan la fluctuación del ciclo \cite{shaffer2017overview}. Ambos exigen
-registros de varias horas, y esa exigencia no es negociable: sobre series
-cortas el DFA presenta un sesgo conocido que puede producir un exponente
-aparente en series construidas sin memoria alguna.
+acotan la fluctuación del ciclo \cite{shaffer2017overview}. El DFA fue
+concebido para series que abarcan varias horas de registro, aunque $\alpha_1$
+puede aproximarse en segmentos de unos dos minutos \cite{shaffer2017overview}.
+En series cortas o en ventanas de pocos puntos, el estimador presenta además un
+sesgo que puede producir un exponente aparente en series sin memoria; la
+Sección~\ref{sec:mp} lo cuantifica para la implementación de este trabajo.
 
 \subsubsection{Exponente de Hurst y exponente del DFA no son lo mismo}
 
@@ -156,9 +157,10 @@ regímenes, la declaración es indispensable.
 Si además la densidad espectral de potencia de la serie sigue
 $S(f) \propto f^{-\beta}$, entonces $\alpha = (\beta+1)/2$. Esta última relación
 es la que permite generar una serie con un exponente prescrito por síntesis
-espectral, y se emplea en el módulo de ritmo descrito en los métodos.
+espectral \cite{hardstone2012dfa}, y se emplea en el módulo de ritmo descrito
+en los métodos.
 
-\subsubsection{Valores de referencia y la trampa de la interpretación intuitiva}
+\subsubsection{Valores de referencia y criterios de interpretación}
 
 Costa et al.\ \cite{costa2017fragmentation}, sobre registros de veinticuatro
 horas de 109 adultos sanos de edad mediana 40 años, reportan $\alpha_1$ de
@@ -166,8 +168,8 @@ horas de 109 adultos sanos de edad mediana 40 años, reportan $\alpha_1$ de
 0,81--1,15 en pacientes con enfermedad coronaria. El exponente, por lo tanto,
 desciende con la patología en esa cohorte.
 
-Ese dato invita a una lectura intuitiva —más desorden en el sano, más orden en
-el enfermo— que conviene resistir por dos razones documentadas. La primera es
+Ese dato invita a una lectura direccional ---más desorden en el sano, más
+orden en el enfermo--- que no se sostiene, por dos razones documentadas. La primera es
 que una variabilidad mayor no es en sí misma señal de salud: hay condiciones
 patológicas que la elevan, y en pacientes post-infarto un aumento de la
 variabilidad no lineal constituye un factor de riesgo independiente de
