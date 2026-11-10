@@ -212,9 +212,9 @@ sus fluctuaciones, que es la dimensión que el exponente captura y que esos
 
 \subsection{Motor de reglas fisiológicas: cohorte etiquetada}\label{sec:cohorte}
 
-Se generó una cohorte de 500 sujetos sanos y 500 enfermos con el motor descrito en la Subsección~\ref{sec:reglas}, con semilla 0, sobre la plantilla morfológica de los 2.237 latidos ajustados y en el estrato de referencia de hombres de 60 a 69 años. El archivo de la cohorte registra la semilla, el estrato, el conjunto de parámetros de origen, la geometría de la ventana y el entorno de cálculo, de modo que puede regenerarse exactamente.
+Se generó una cohorte de 500 sujetos sanos y 500 enfermos con el motor descrito en la Subsección~\ref{sec:reglas}, con semilla 0, sobre la plantilla morfológica de los 2.237 latidos ajustados, en el estrato de referencia de hombres de 60 a 69 años y con los rangos llevados a la escala del motor según la calibración de la Subsección~\ref{sec:calibracion}. El archivo de la cohorte registra la semilla, el estrato, el conjunto de parámetros de origen, la geometría de la ventana y el entorno de cálculo, de modo que puede regenerarse exactamente.
 
-El Tabla~\ref{tab:cohorte} resume la verificación. Ninguna de las cinco condiciones falla en ninguno de los mil sujetos.
+La Tabla~\ref{tab:cohorte} resume la verificación. Ninguna de las cinco condiciones falla en ninguno de los mil sujetos.
 
 \begin{table}[H]
 \centering
@@ -231,7 +231,7 @@ Centro de la onda T fuera de la ventana de extracción & 0 de 1.000 \\ \hline
 \label{tab:cohorte}
 \end{table}
 
-En el grupo de enfermos, el rasgo desviado se distribuyó entre 131 sujetos por el intervalo PR, 132 por la duración del QRS, 130 por el intervalo QT y 107 por la duración de la onda P. En el grupo control, los intervalos medidos cubren los rangos de referencia completos: el PR va de 114,0 a 216,0~ms, el QRS de 76,0 a 113,9~ms y el QT de 338,6 a 471,5~ms. Este último alcanza valores por encima de 450~ms sin que ello constituya un error de etiquetado, por las razones expuestas en la Subsección~\ref{sec:reglas}: se trata de QT sin corregir por frecuencia. El centro de la onda T de los sujetos sanos se ubica entre 122 y 316~ms después del pico R; en ausencia de un rango de referencia para esa posición, la cifra se informa como observación y no como criterio de validez.
+En el grupo de enfermos, el rasgo desviado se distribuyó entre 131 sujetos por el intervalo PR, 132 por la duración del QRS, 130 por el intervalo QT y 107 por la duración de la onda P. En el grupo control, los intervalos cubren los rangos de referencia completos. Expresados en la escala clínica, el PR va de 114,0 a 216,0~ms, el QRS de 76,0 a 113,9~ms y el QT de 338,6 a 471,5~ms; en la escala del motor, los mismos sujetos van de 146,5 a 277,5~ms, de 62,0 a 93,0~ms y de 322,9 a 449,6~ms. El QT clínico alcanza valores por encima de 450~ms sin que ello constituya un error de etiquetado, por las razones expuestas en la Subsección~\ref{sec:reglas}: se trata de QT sin corregir por frecuencia. El centro de la onda T de los sujetos sanos se ubica entre 126 y 303~ms después del pico R; en ausencia de un rango de referencia para esa posición, la cifra se informa como observación y no como criterio de validez.
 
 \subsection{Alcance efectivo respecto a los resultados proyectados}
 

@@ -27,7 +27,7 @@ Los resultados reportados se obtuvieron con Python 3.12.4, NumPy 2.1.3 y SciPy 1
 
 El núcleo del generador es un modelo fenomenológico paramétrico, que describe la señal ECG como una combinación lineal de funciones matemáticas.
 
-\subsubsection{Modelo de gaussianas Asimétricas}
+\subsubsection{Modelo de gaussianas asimétricas}
 
 Cada ciclo cardíaco (latido) se modela mediante la superposición de cinco funciones gaussianas asimétricas, correspondientes a las ondas P, Q, R, S y T, más un término de línea base afín. La señal sintética $x(t)$ se define como:
 
@@ -58,7 +58,7 @@ Los parámetros del modelo se ajustan a latidos reales mediante optimización nu
     \item \textbf{Algoritmo:} se utiliza el método L-BFGS-B \cite{byrd1995limited}, que admite restricciones de caja sobre cada parámetro, con el gradiente analítico de la función objetivo y una tolerancia relativa de $10^{-9}$ sobre la función como criterio de parada.
 \end{enumerate}
 
-El punto de partida de cada latido es una plantilla fija declarada en milisegundos respecto del pico R ---centros de $-150$, $-25$, $0$, $+25$ y $+300$~ms para P, Q, R, S y T---, con las amplitudes escaladas al pico del latido y el desnivel de línea base inicializado en la mediana de los primeros y últimos 33~ms de la ventana. El Tabla~\ref{tab:cotas} resume las restricciones de caja. Las amplitudes se expresan como fracción del valor máximo del latido normalizado, y las posiciones y anchos en milisegundos respecto del pico R; la Subsección~\ref{sec:residuo} justifica esa elección.
+El punto de partida de cada latido es una plantilla fija declarada en milisegundos respecto del pico R ---centros de $-150$, $-25$, $0$, $+25$ y $+300$~ms para P, Q, R, S y T---, con las amplitudes escaladas al pico del latido y el desnivel de línea base inicializado en la mediana de los primeros y últimos 33~ms de la ventana. La Tabla~\ref{tab:cotas} resume las restricciones de caja. Las amplitudes se expresan como fracción del valor máximo del latido normalizado, y las posiciones y anchos en milisegundos respecto del pico R; la Subsección~\ref{sec:residuo} justifica esa elección.
 
 \begin{table}[H]
 \centering
@@ -97,6 +97,30 @@ donde $b$ es la posición del centro de la onda y $c^{\text{asc}}$ y $c^{\text{d
 
 La operación inversa, que impone un intervalo dado reescalando los parámetros, es la que construye cada sujeto. Ambas operaciones son inversas entre sí: medir un sujeto generado devuelve los valores que se le pidieron, con un error máximo del orden de $10^{-14}$~ms, atribuible a la aritmética de punto flotante.
 
+\subsubsection{Calibración de la convención con PTB-XL+}\label{sec:calibracion}
+
+Un intervalo medido con la convención de $k$ anchos y el mismo intervalo medido clínicamente no son la misma magnitud. La medición clínica señala dónde la onda se ve empezar y terminar en el trazado, y la convención mide el ancho matemático de cada gaussiana, que puede ser grande en una onda de baja amplitud sin que se note en el trazo. Imponer los rangos de Palhares et al.\ directamente sobre la convención supondría que ambas escalas coinciden.
+
+Para relacionarlas se empleó PTB-XL+ \cite{strodthoff2023ptbxlplus}, que acompaña a los registros de PTB-XL \cite{wagner2020ptbxl} con latidos medianos por derivación y con las mediciones globales de PR, QRS, QT y duración de la onda P obtenidas sobre las doce derivaciones. Se seleccionaron los electrocardiogramas de hombres de 60 a 69 años con diagnóstico normal y sin otro código diagnóstico, y se ajustó el modelo de veintidós parámetros al latido mediano de la derivación II de cada uno con el mismo procedimiento de la Subsección~\ref{sec:unidad}. De 877 seleccionados se ajustaron 841, con una correlación de Pearson mediana de 0,996; se descartaron 27 cuyo complejo dominante en la derivación II era negativo y 9 cuya ventana excedía el latido mediano.
+
+El factor que relaciona ambas escalas depende de la forma del latido: para el QRS varía de 1,23 sobre todos los latidos a 0,76 sobre los que tienen ondas Q y S mayores al 20\,\% de la onda R. Como el motor genera a todos los sujetos a partir de una única plantilla, se usaron los 150 latidos de PTB-XL+ cuya forma es más cercana a la de ella, medida por la distancia euclídea entre los logaritmos de las amplitudes de Q, S, P y T relativas a R. Para cada intervalo, el factor es la mediana del cociente entre la medición con la convención y la medición clínica, con un intervalo de confianza del 95\,\% por remuestreo (Tabla~\ref{tab:calibracion}). El rango que el motor impone es el rango clínico multiplicado por ese factor; las etiquetas y los desvíos se siguen definiendo sobre el rango clínico.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Intervalo} & \textbf{Factor} & \textbf{IC 95\,\%} & \textbf{Con 75 / 300 vecinos} & \textbf{Rango en el motor (ms)} \\ \hline
+PR & 1,285 & 1,204--1,349 & 1,317 / 1,220 & 146,5--277,6 \\ \hline
+QRS & 0,816 & 0,775--0,862 & 0,817 / 0,863 & 62,0--93,0 \\ \hline
+QT & 0,954 & 0,944--0,960 & 0,944 / 0,955 & 322,3--450,1 \\ \hline
+Onda P & 1,396 & 1,284--1,516 & 1,396 / 1,324 & 114,4--195,4 \\ \hline
+\end{tabular}
+\caption{Factores entre la convención de $k = 2$ anchos y la medición clínica, estimados sobre los 150 latidos medianos de PTB-XL+ más parecidos a la plantilla, y rangos de Palhares et al.\ (hombres de 60 a 69 años) llevados a la escala del motor. La columna de vecinos muestra la sensibilidad del factor al número de latidos empleados.}
+\label{tab:calibracion}
+\end{table}
+
+Devuelta a la escala clínica con estos factores, la plantilla tiene un PR de 158~ms, un QRS de 82~ms y una onda P de 108~ms, valores normales para el sujeto del registro 100. Sin la calibración, el desvío hacia arriba del PR, que el motor impone en 241,5~ms, equivalía a unos 188~ms clínicos: un intervalo normal etiquetado como prolongado. La primera cohorte de este trabajo se generó sin calibrar, y se conserva como referencia reproducible.
+
 \subsubsection{Rasgos impuestos y rasgos desviables}
 
 El motor distingue dos conjuntos de rasgos, y la distinción responde al respaldo bibliográfico de cada uno. A todo sujeto se le \emph{imponen} cinco rasgos: el intervalo PR, la duración del QRS, el intervalo QT y las duraciones de las ondas P y T. Para construir un sujeto del grupo de enfermos se puede \emph{desviar} solo alguno de los cuatro primeros, que son exactamente los que tienen su rango cotejado contra la fuente primaria.
@@ -105,9 +129,9 @@ La duración de la onda T se impone siempre, pero no se desvía nunca. Se impone
 
 \subsubsection{Construcción de las dos clases}
 
-Un sujeto del \textbf{grupo control} se genera sorteando cada rasgo impuesto de manera uniforme dentro de su rango normal. Un sujeto del \textbf{grupo de enfermos} se genera sorteando uno de los rasgos desviables y llevándolo fuera de su rango, por arriba o por abajo, en una magnitud igual al 25\,\% del ancho del propio rango; el resto de sus rasgos se sortea dentro del rango normal. La magnitud del desvío es fija, de modo que cada rasgo desviado toma uno de dos valores posibles: su límite inferior menos esa magnitud, o su límite superior más ella.
+Un sujeto del \textbf{grupo control} se genera sorteando cada rasgo impuesto de manera uniforme dentro de su rango normal. Un sujeto del \textbf{grupo de enfermos} se genera sorteando uno de los rasgos desviables y llevándolo fuera de su rango, por arriba o por abajo, en una magnitud igual al 25\,\% del ancho del propio rango; el resto de sus rasgos se sortea dentro del rango normal. La magnitud del desvío es fija, de modo que cada rasgo desviado toma uno de dos valores posibles: su límite inferior menos esa magnitud, o su límite superior más ella. En la escala clínica, esos valores son 241,5 y 88,5~ms para el PR, 123,5 y 66,5~ms para el QRS, 505,5 y 304,5~ms para el QT, y 154,5 y 67,5~ms para la duración de la onda P. Los desvíos hacia arriba superan los umbrales clínicos habituales de bloqueo auriculoventricular de primer grado (200~ms), de QRS ancho (120~ms) \cite{surawicz2009aha3} y de onda P prolongada (120~ms).
 
-Los rasgos se sortean de forma independiente, pero en un ECG real no lo son: la onda T ocupa una fracción del intervalo QT. Sortear un QT cercano a su percentil 2 junto con una onda T cercana a su percentil 98 produce un sujeto en que cada rasgo es normal por separado y el conjunto no lo es. Por eso el motor aplica una regla de coherencia: la duración de la onda T se acota al 50\,\% del QT del propio sujeto. En la cohorte reportada en la Subsección~\ref{sec:cohorte}, la regla se aplicó en 124 de los 1.000 sujetos.
+Los rasgos se sortean de forma independiente, pero en un ECG real no lo son: la onda T ocupa una fracción del intervalo QT. Sortear un QT cercano a su percentil 2 junto con una onda T cercana a su percentil 98 produce un sujeto en que cada rasgo es normal por separado y el conjunto no lo es. Por eso el motor aplica una regla de coherencia: la duración de la onda T se acota al 50\,\% del QT del propio sujeto. En la cohorte reportada en la Subsección~\ref{sec:cohorte}, la regla se aplicó en 187 de los 1.000 sujetos.
 
 Las etiquetas son \emph{de construcción} y no diagnósticas. Un sujeto queda marcado como enfermo porque uno de sus parámetros se generó deliberadamente fuera del rango de referencia, y el motor registra cuál fue y en cuánto se desvió. Esa trazabilidad es la ventaja concreta de un generador paramétrico: en un conjunto de datos real las causas de una anomalía no se pueden separar, mientras que aquí cada sujeto trae anotada la suya.
 
@@ -133,10 +157,7 @@ El motor no simula morfologías arrítmicas: no reproduce la elevación del segm
 
 Todos los sujetos comparten la morfología de la plantilla y difieren solo en sus intervalos; además, cada rasgo desviado toma uno de dos valores fijos. Un clasificador entrenado sobre esta cohorte podría separar las clases con un umbral sobre un único intervalo, de modo que la cohorte sirve para verificar el motor, y su uso para entrenar clasificadores exige agregar variabilidad morfológica y magnitudes de desvío continuas.
 
-% PENDIENTE (ronda 2): la convención k = 2 no coincide con la medición clínica
-% de los intervalos. La calibración con PTB-XL+ (scripts/diseno2) entrega los
-% factores k2/clínico (QRS 0,816; PR 1,285; QT 0,954; P 1,396). Incorporarla
-% aquí, regenerar la cohorte y actualizar la Subsección de rangos.
+La calibración de la Subsección~\ref{sec:calibracion} es específica de la forma de la plantilla y se estimó sobre la derivación II de un estrato, con mediciones clínicas globales de doce derivaciones. Un cambio de plantilla o de estrato exige recalcular los factores.
 
 
 \subsection{Metodología de validación de la reconstrucción morfológica}
