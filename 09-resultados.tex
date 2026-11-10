@@ -6,13 +6,7 @@
 
 La validación experimental se realizó sobre la MIT-BIH Arrhythmia Database \cite{moody2001impact}, disponible públicamente a través de PhysioNet. De los 48 registros que componen la base, se utilizó el registro 100, muestreado a 360 Hz sobre dos derivaciones, del cual se procesó el canal MLII.
 
-La extracción de latidos se apoyó en las anotaciones de referencia del propio registro. De las 2.274 anotaciones disponibles se seleccionaron exclusivamente aquellas etiquetadas como latido sinusal normal (símbolo \texttt{N}), descartando latidos ectópicos, artefactos y marcas de ritmo. Este filtrado produjo un conjunto de 2.237 latidos de las 2.239 anotaciones normales, tras descartar dos: el último latido del registro, que el recorrido de las anotaciones no considera como precaución frente a los bordes, y uno cuya ventana de extracción se salía del registro.
-
-Cada latido se extrajo mediante una ventana \emph{asimétrica} respecto del pico R anotado: 250 ms antes y 500 ms después, es decir 270 muestras a 360 Hz, y se normalizó mediante puntuación Z, de modo que la comparación entre señal real y sintética fuese independiente de la ganancia del canal.
-
-La asimetría se sigue de la fisiología del complejo y no de una conveniencia de implementación. La onda P precede al pico R en unos 150 a 200 ms y dura entre 80 y 110 ms, de modo que su inicio se ubica cerca de 250 ms antes; la onda T termina entre 400 y 450 ms después, dado que el intervalo QT normal ronda los 400 ms. Una ventana centrada en el pico R no puede contener el complejo completo, y la Subsección \ref{sec:validez} cuantifica lo que ocurre cuando se usa una.
-
-El desarrollo se implementó en Python 3.12, empleando NumPy y SciPy \cite{virtanen2020scipy} para el cálculo numérico y la optimización, y WFDB para la lectura de los registros.
+De las 2.274 anotaciones del registro se seleccionaron las 2.239 etiquetadas como latido normal (símbolo \texttt{N}), de las que se extrajeron 2.237 latidos según el procedimiento de la Subsección~\ref{sec:unidad}. Cada latido se extrajo con la ventana asimétrica de 250~ms antes y 500~ms después del pico R anotado (270 muestras) y se normalizó mediante puntuación Z. La Subsección~\ref{sec:validez} cuantifica el efecto de esa ventana frente a una centrada en el pico R.
 
 \subsection{Diseño de los experimentos}
 
@@ -47,11 +41,11 @@ Máximo & 0,9989 & 0,2916 \\ \hline
 \label{tab:metricas}
 \end{table}
 
-La correlación media alcanzada fue de 0,9969 con una desviación estándar de 0,0015, y el RMSE medio de 0,0779 desviaciones estándar de la señal normalizada con una desviación de 0,0148. La dispersión reducida de ambas métricas indica que el desempeño es estable a lo largo del registro y no depende de latidos particularmente favorables: la totalidad de los latidos supera una correlación de 0,95, el 99,7\% supera 0,99, ninguno queda por debajo de 0,90, y el 94,1\% presenta un RMSE inferior a 0,10. El peor latido del registro alcanza aun así una correlación de 0,9571. El sesgo medio del residuo fue de $-0{,}0000$ con desviación estándar de 0,0004, es decir indistinguible de cero: el modelo no deja componente sistemática sin explicar.
+La correlación media alcanzada fue de 0,9969 con una desviación estándar de 0,0015, y el RMSE medio de 0,0779 desviaciones estándar de la señal normalizada con una desviación de 0,0148. La dispersión reducida de ambas métricas indica que el desempeño es estable a lo largo del registro y no depende de latidos particularmente favorables: el 100\,\% de los latidos supera una correlación de 0,95 (mínimo 0,9571), el 99,7\,\% supera 0,99 y el 94,1\,\% presenta un RMSE inferior a 0,10. El sesgo medio del residuo fue de $-4{,}2\cdot10^{-6}$, con desviación estándar de $4{,}3\cdot10^{-4}$, es decir indistinguible de cero: el modelo no deja componente sistemática sin explicar.
 
 Corresponde una advertencia sobre la comparación con la iteración anterior de este modelo, que sobre una ventana centrada de 356 ms reportaba una correlación de 0,9986 y un RMSE de 0,0496. Esas cifras \emph{no son comparables} con las de aquí. La ventana pasó de 356 a 750 ms, de modo que hay más del doble de señal que explicar con el mismo número de parámetros, y un error mayor sobre una ventana mayor no indica un modelo peor. Lo que sí es comparable entre ambas versiones, y lo que se reporta a continuación, es la validez de los parámetros ajustados.
 
-El Cuadro \ref{tab:iteraciones} contrasta ambas iteraciones del modelo sobre el mismo conjunto de latidos. La primera es la implementación de veinte parámetros con restricciones expresadas en unidades de señal cruda; la segunda incorpora el término de línea base y expresa las restricciones de amplitud como fracción del pico del latido.
+La Tabla~\ref{tab:iteraciones} contrasta las tres iteraciones del modelo sobre el mismo registro. La primera es la implementación de veinte parámetros con restricciones expresadas en unidades de señal cruda; la segunda incorpora el término de línea base y expresa las restricciones de amplitud como fracción del pico del latido; la tercera conserva el modelo de la segunda y reemplaza la ventana centrada de 356~ms por la asimétrica de 750~ms.
 
 \begin{table}[H]
 \centering
@@ -68,7 +62,7 @@ Parámetros saturados por latido & 11,8 de 20 & 1,8 de 22 & 0,83 de 22 \\ \hline
 Latidos con el centro de T fuera de la ventana & 0 de 2.238 & 1.637 de 2.238 & 0 de 2.237 \\ \hline
 Asimetría mediana del ancho de P & 1,00 & 7,63 & 1,23 \\ \hline
 \end{tabular}
-\caption{Contraste entre las tres iteraciones del modelo. Las columnas de RMSE no son comparables entre la segunda y la tercera, porque las ventanas abarcan cantidades distintas de señal; las filas de validez de parámetros sí lo son. En la primera iteración, el centro de T y la asimetría de P no delatan el problema porque sus propias cotas los forzaban a valores aceptables: sus parámetros eran artefactos de las restricciones, no del recorte. La primera y la tercera se reproducen con el código actual por línea de comandos; la segunda se re-valida desde sus parámetros guardados.}
+\caption{Contraste entre las tres iteraciones del modelo. La fila de RMSE no es comparable entre la segunda y la tercera columna, porque las ventanas abarcan cantidades distintas de señal; las filas de validez de parámetros sí lo son. En la primera iteración, el centro de T y la asimetría de P no delatan el problema porque sus propias cotas los forzaban a valores aceptables: sus parámetros eran artefactos de las restricciones, no del recorte. La primera y la tercera se reproducen con el código actual por línea de comandos; la segunda se re-valida desde sus parámetros guardados.}
 \label{tab:iteraciones}
 \end{table}
 
@@ -183,16 +177,19 @@ exponente fisiológico de un artefacto de un registro corto.
 
 Se generó una cohorte de cincuenta sujetos sintéticos de veinticuatro horas cada
 uno, con 101.647 latidos por sujeto y un exponente sorteado por sujeto de una
-distribución normal, de modo que la cohorte tenga dispersión entre individuos y
-no un único exponente repetido. La correlación entre el exponente pedido y el
+distribución normal de media 1,17 y desviación estándar 0,10, acotada a
+$[0{,}55;\,1{,}45]$, de modo que la cohorte tenga dispersión entre individuos y
+no un único exponente repetido; la media muestral de los exponentes pedidos fue
+1,14. Se empleó semilla 7. La correlación entre el exponente pedido y el
 recuperado es de 0,98, con un error absoluto medio de 0,014, y ningún intervalo
 requirió recorte por salirse del rango fisiológico. El exponente de corto
 alcance de la cohorte resultó $\alpha_1 = 1{,}17 \pm 0{,}09$, unas tres
 centésimas por encima del exponente global recuperado, $1{,}14$. Esa diferencia
-no debe leerse como un cruce de pendiente: el generador es monofractal, produce
-un único exponente en todas las escalas, y el exceso de $\alpha_1$ es
-consistente con el sesgo positivo del estimador en ventanas de pocos latidos
-descrito en la Sección \ref{sec:mp}. Tampoco debe leerse como una validación
+no debe leerse como un cruce de pendiente: el generador es monofractal y produce
+un único exponente en todas las escalas. El exceso de $\alpha_1$ tiene el mismo
+signo que el sesgo del estimador en ventanas de pocos latidos descrito en la
+Sección~\ref{sec:mp}, aunque ese sesgo se caracterizó sobre series sin memoria
+($\alpha = 0{,}5$) y su magnitud para exponentes cercanos a 1,17 no se midió. Tampoco debe leerse como una validación
 frente al valor de 1,17 reportado para adultos sanos
 \cite{costa2017fragmentation}: el exponente que se le pidió a la cohorte se
 sorteó de una distribución centrada precisamente en ese valor. Reproducir el
@@ -207,8 +204,7 @@ extensión.
 \label{fig:ritmo}
 \end{figure}
 
-El panel (b) de la Figura \ref{fig:ritmo} muestra el punto de toda la
-construcción. Los dos tacogramas comparten media y desviación estándar, de modo
+El panel (b) de la Figura~\ref{fig:ritmo} resume el propósito del módulo. Los dos tacogramas comparten media y desviación estándar, de modo
 que cualquier índice convencional de variabilidad en el dominio del tiempo los
 reportaría como equivalentes; difieren únicamente en la organización temporal de
 sus fluctuaciones, que es la dimensión que el exponente captura y que esos
@@ -257,10 +253,13 @@ Publicación en revista indexada & Pendiente \\ \hline
 \label{tab:alcance}
 \end{table}
 
+% PENDIENTE (ronda 2): actualizar las filas de OE5 (análisis espectral) y OE6
+% (ECGFounder) con los resultados de scripts/oe5 y scripts/oe6.
+
 El motor de reglas fisiológicas se implementó y verificó con dos restricciones de alcance: opera sobre un único estrato de referencia, sin variar el sexo ni la edad, y construye sus etiquetas solo sobre intervalos morfológicos, sin intervención del exponente de escalamiento del ritmo. La validación del conjunto sintético mediante un modelo preentrenado queda fuera del alcance de esta etapa. En consecuencia, las conclusiones sobre fidelidad morfológica son válidas para ritmo sinusal normal, y las etiquetas del motor describen cómo se construyó cada sujeto, no una condición clínica.
 
 \subsection{Resultados de responsabilidad social}
 
-El proyecto pretende democratizar el acceso a datos médicos de alta calidad sin comprometer la privacidad de los pacientes. Al proporcionar un generador robusto, se facilita que investigadores en regiones con pocos recursos clínicos puedan desarrollar y validar sus propios algoritmos de diagnóstico cardiovascular, promoviendo la equidad en las tecnologías de salud asistida.
+El generador produce señales sin emplear datos de pacientes más allá de la semilla morfológica pública, y su código y sus parámetros quedan disponibles para su reutilización. Esto puede facilitar que grupos con acceso limitado a registros clínicos desarrollen y prueben algoritmos de diagnóstico cardiovascular, sin los costos ni las restricciones de privacidad asociados a la recolección de datos reales.
 
 \end{spacing}
