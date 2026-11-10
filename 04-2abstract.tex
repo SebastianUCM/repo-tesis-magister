@@ -1,9 +1,17 @@
 \section*{Abstract}
 \begin{spacing}{1.4}
 
+Computer-aided diagnosis in cardiology is limited by two data problems: the scarcity of labelled recordings and the class imbalance of infrequent conditions. To address them, this work proposes a parametric generator of synthetic electrocardiogram (ECG) signals based on the superposition of five asymmetric Gaussian functions, one per wave of the P-QRS-T cycle, plus a baseline term. Unlike deep generative models, each of its twenty-two parameters has a direct physiological interpretation, which restricts the output space to morphologies described by explicit amplitudes, positions and widths.
+
+The generator comprises three modules. The first fits the model beat by beat with the L-BFGS-B algorithm, using an analytical gradient and box constraints. On 2,237 normal beats from record 100 of the MIT-BIH Arrhythmia Database, the reconstruction reached a mean Pearson correlation of 0.9969 and a root mean square error (RMSE) of 0.078 standard deviations of the normalized signal, with no systematic residual bias. The second is a physiological rule engine that sets the PR, QRS and QT intervals and the P-wave duration inside published normal ranges, or outside them, to build a control group and a group of subjects with declared deviations; on a cohort of 500 healthy and 500 deviated subjects, the measured intervals matched the label in every case. The third is a rhythm module that generates the inter-beat interval series by spectral synthesis, with the scaling exponent of detrended fluctuation analysis as an input parameter, and couples it to the morphology by scaling only the P and T waves with heart rate. On fifty synthetic 24-hour series, the exponent was recovered with a mean absolute error of 0.014.
+
+The results show that a parametric model with few functions reproduces the P-QRS-T morphology in normal sinus rhythm and yields datasets that are labelled by construction, with the cause of each label traceable. The main limitations are the use of a single record as morphological seed, the representation of the T wave, and the constructive, non-diagnostic nature of the labels.
+
+% PENDING (round 2): add one sentence on the frequency-domain validation (OE5)
+% and the evaluation with the pretrained ECGFounder model (OE6).
 
 \vspace{0.5cm}
 
-\noindent\textbf{Keywords:} Synthetic ECG, Gaussian Models, Numerical Optimization, Physiological Variability, Data Augmentation.
+\noindent\textbf{Keywords:} Synthetic ECG, Gaussian models, Numerical optimization, Detrended fluctuation analysis, Heart rate variability, Data augmentation.
 
 \end{spacing}
