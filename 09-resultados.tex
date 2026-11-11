@@ -49,7 +49,7 @@ La Tabla~\ref{tab:iteraciones} contrasta las tres iteraciones del modelo sobre e
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{5.2cm}|c|c|c|}
+\resizebox{\textwidth}{!}{\begin{tabular}{|p{5.2cm}|c|c|c|}
 \hline
 \textbf{Indicador} & \textbf{Primera} & \textbf{Segunda} & \textbf{Tercera} \\ \hline
 Ventana de extracción & 356 ms centrada & 356 ms centrada & 750 ms asimétrica \\ \hline
@@ -61,7 +61,7 @@ Sesgo medio del residuo (sintética $-$ real) & $+0{,}1457$ & $-0{,}0000$ & $-0{
 Parámetros saturados por latido & 11,8 de 20 & 1,8 de 22 & 0,83 de 22 \\ \hline
 Latidos con el centro de T fuera de la ventana & 0 de 2.238 & 1.637 de 2.238 & 0 de 2.237 \\ \hline
 Asimetría mediana del ancho de P & 1,00 & 7,63 & 1,23 \\ \hline
-\end{tabular}
+\end{tabular}}
 \caption{Contraste entre las tres iteraciones del modelo. La fila de RMSE no es comparable entre la segunda y la tercera columna, porque las ventanas abarcan cantidades distintas de señal; las filas de validez de parámetros sí lo son. En la primera iteración, el centro de T y la asimetría de P no delatan el problema porque sus propias cotas los forzaban a valores aceptables: sus parámetros eran artefactos de las restricciones, no del recorte. La primera y la tercera se reproducen con el código actual por línea de comandos; la segunda se re-valida desde sus parámetros guardados.}
 \label{tab:iteraciones}
 \end{table}
@@ -233,6 +233,97 @@ Centro de la onda T fuera de la ventana de extracción & 0 de 1.000 \\ \hline
 
 En el grupo de enfermos, el rasgo desviado se distribuyó entre 131 sujetos por el intervalo PR, 132 por la duración del QRS, 130 por el intervalo QT y 107 por la duración de la onda P. En el grupo control, los intervalos cubren los rangos de referencia completos. Expresados en la escala clínica, el PR va de 114,0 a 216,0~ms, el QRS de 76,0 a 113,9~ms y el QT de 338,6 a 471,5~ms; en la escala del motor, los mismos sujetos van de 146,5 a 277,5~ms, de 62,0 a 93,0~ms y de 322,9 a 449,6~ms. El QT clínico alcanza valores por encima de 450~ms sin que ello constituya un error de etiquetado, por las razones expuestas en la Subsección~\ref{sec:reglas}: se trata de QT sin corregir por frecuencia. El centro de la onda T de los sujetos sanos se ubica entre 126 y 303~ms después del pico R; en ausencia de un rango de referencia para esa posición, la cifra se informa como observación y no como criterio de validez.
 
+\subsection{Validación en el dominio de la frecuencia}\label{sec:res_espectral}
+
+La reconstrucción conserva la distribución espectral de cada latido con un error menor que la variabilidad natural entre latidos del mismo registro. La Figura~\ref{fig:espectral} y la Tabla~\ref{tab:espectral} resumen el análisis de la Subsección~\ref{sec:met_espectral} sobre los 2.237 latidos.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig/figura_espectral.png}
+\caption{Análisis espectral de la reconstrucción sobre los 2.237 latidos del registro 100. (Izquierda) Densidad espectral mediana y banda entre los percentiles 10 y 90 del latido real, de su reconstrucción y del residuo. (Centro) Distancia espectral logarítmica en 0,67--40~Hz entre cada latido y su reconstrucción, frente a la distancia entre cada latido y el latido real siguiente. (Derecha) Relación entre la potencia de la señal y la del residuo por banda.}
+\label{fig:espectral}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|c|}
+\hline
+\textbf{Medida (0,67--40~Hz)} & \textbf{Mediana [P25--P75]} \\ \hline
+Distancia espectral, latido real frente a su reconstrucción & 0,27~dB [0,23--0,35] \\ \hline
+Distancia espectral, latido real frente al latido real siguiente & 1,01~dB [0,66--1,82] \\ \hline
+Correlación de los espectros en escala logarítmica & 0,9982 [0,9969--0,9989] \\ \hline
+\end{tabular}}
+
+\vspace{0.3cm}
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Banda} & \textbf{Error relativo de potencia} & \textbf{Señal / residuo} \\ \hline
+0,67--5~Hz (P, T y línea base) & $+0{,}2$\,\% [$-1{,}8$; $+2{,}5$] & 24,9~dB \\ \hline
+5--15~Hz (núcleo del QRS) & $-0{,}8$\,\% [$-1{,}9$; $+0{,}4$] & 27,3~dB \\ \hline
+15--40~Hz (QRS rápido) & $0{,}0$\,\% [$-0{,}6$; $+0{,}6$] & 29,9~dB \\ \hline
+40--100~Hz (fuera de la banda clínica) & $-8{,}1$\,\% [$-11{,}8$; $-5{,}4$] & 11,4~dB \\ \hline
+\end{tabular}}
+\caption{Fidelidad espectral de la reconstrucción: medianas y, entre corchetes, percentiles 25 y 75 sobre los 2.237 latidos.}
+\label{tab:espectral}
+\end{table}
+
+En el 99,9\,\% de los latidos, la reconstrucción está más cerca de su latido que el latido real siguiente. Dentro de la banda clínica, el error relativo de potencia es del orden del 1\,\% o menor en las tres bandas, y el residuo queda entre 25 y 30~dB por debajo de la señal. Por encima de 40~Hz el modelo pierde un 8\,\% de la potencia: lo que no reproduce es la interferencia de red de 60~Hz del registro, visible como un pico en el espectro del residuo, y el ruido de alta frecuencia. Estas medidas comparan cada latido con su propia reconstrucción y, como Pearson y el RMSE, miden capacidad de representación.
+
+Para los sujetos sanos generados por el motor, la distancia espectral al espectro mediano de los latidos reales tiene una mediana de 1,69~dB [1,38--1,94], frente a 0,77~dB [0,53--1,15] entre los propios latidos reales. Ningún sujeto sano supera el percentil 95 de la distribución real (3,08~dB): los sanos sintéticos caen dentro de la nube espectral real, aunque no en su centro. La distancia remanente es esperable, porque los sujetos varían sus intervalos dentro de rangos poblacionales mientras que los latidos reales pertenecen a una sola persona. Sin la calibración de la Subsección~\ref{sec:calibracion}, la mediana era de 1,92~dB.
+
+\subsection{Validación con una red neuronal entrenada}\label{sec:res_red}
+
+Una red entrenada solo con sujetos sintéticos reconoce en registros reales el QT largo, la onda P ancha y, en menor medida, el PR largo, y no reconoce el QRS ancho. La Tabla~\ref{tab:red} resume las cinco configuraciones de la Subsección~\ref{sec:met_red}. El conjunto de prueba contiene 2.397 registros reales: 1.826 sanos, 374 con QRS ancho, 200 con PR largo, 23 con QT largo y 85 con onda P ancha.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Entrenada con} & \textbf{QRS ancho} & \textbf{PR largo} & \textbf{QT largo} & \textbf{Onda P ancha} \\ \hline
+A: solo sintéticos & 0,568 $\pm$ 0,026 & 0,645 $\pm$ 0,018 & 0,918 $\pm$ 0,016 & 0,717 $\pm$ 0,010 \\ \hline
+A sin variabilidad & 0,585 $\pm$ 0,034 & 0,496 $\pm$ 0,041 & 0,857 $\pm$ 0,087 & 0,476 $\pm$ 0,021 \\ \hline
+B: reales (\emph{folds} 1--8) & 0,947 $\pm$ 0,001 & 0,985 $\pm$ 0,001 & 0,955 $\pm$ 0,005 & 0,932 $\pm$ 0,003 \\ \hline
+B10: 10\,\% de los reales & 0,924 $\pm$ 0,003 & 0,983 $\pm$ 0,002 & 0,918 $\pm$ 0,011 & 0,866 $\pm$ 0,009 \\ \hline
+C: sintéticos + ese 10\,\% & 0,923 $\pm$ 0,004 & 0,979 $\pm$ 0,001 & 0,932 $\pm$ 0,003 & 0,813 $\pm$ 0,008 \\ \hline
+\end{tabular}}
+\caption{AUROC sobre los registros reales de prueba de PTB-XL (\emph{folds} 9 y 10), media $\pm$ desviación estándar sobre tres semillas. Con solo 23 casos, el intervalo de confianza del QT largo es amplio: para A, de 0,88 a 0,96 en la primera semilla.}
+\label{tab:red}
+\end{table}
+
+\subsubsection{Transferencia de sintéticos a reales}
+
+La red A alcanza un AUROC de 0,918 en QT largo, igual al de la red entrenada con el 10\,\% de los reales, y de 0,717 en onda P ancha. En PR largo, 0,645, la transferencia es parcial, y en QRS ancho, 0,568, apenas supera el azar. Dentro del dominio sintético, la misma red alcanza un AUROC de 1,000 en las cuatro tareas: la tarea es trivial entre sintéticos, y la diferencia con los reales mide la distancia entre ambos dominios.
+
+La variabilidad agregada a la cohorte de entrenamiento es lo que permite la transferencia. Sin ella, la red alcanza 0,496 en PR largo y 0,476 en onda P ancha, es decir azar, y su desempeño en QT largo es más inestable entre semillas. Con ella, esas dos tareas suben a 0,645 y 0,717. En QRS ancho no hay diferencia.
+
+\subsubsection{Prueba inversa}
+
+La Tabla~\ref{tab:inversa} muestra cómo las redes entrenadas con registros reales leen a los sujetos sintéticos reservados.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Entrenada con} & \textbf{QRS ancho} & \textbf{PR largo} & \textbf{QT largo} & \textbf{Onda P ancha} \\ \hline
+B: reales (\emph{folds} 1--8) & 0,633 $\pm$ 0,074 & 0,853 $\pm$ 0,048 & 0,992 $\pm$ 0,004 & 0,335 $\pm$ 0,057 \\ \hline
+B10: 10\,\% de los reales & 0,628 $\pm$ 0,034 & 0,781 $\pm$ 0,024 & 0,982 $\pm$ 0,004 & 0,326 $\pm$ 0,055 \\ \hline
+\end{tabular}}
+\caption{Prueba inversa: AUROC sobre los 1.500 sujetos sintéticos reservados de redes entrenadas solo con registros reales, media $\pm$ desviación estándar sobre tres semillas.}
+\label{tab:inversa}
+\end{table}
+
+Las redes entrenadas con datos reales reconocen el QT largo sintético casi sin error y el PR largo en buena medida. El QRS ancho sintético se reconoce débilmente, y la onda P ancha sintética se lee al revés: la red la considera menos alterada que la de los sujetos sanos sintéticos.
+
+\subsubsection{Lectura conjunta}
+
+Las dos direcciones coinciden. Las alteraciones que el motor produce desplazando una onda o alargando un intervalo sin cambiar su forma ---el QT largo y, en menor medida, el PR largo--- se reconocen en ambos sentidos. Las que en un registro real implican además un cambio de forma no se reproducen. El QRS ancho de PTB-XL corresponde sobre todo a bloqueos de rama, con morfologías como el complejo RSR' que el motor no genera porque solo estira las ondas Q y S. El agrandamiento auricular izquierdo suele acompañarse de una onda P bifásica o con muesca, mientras que el motor ensancha una gaussiana lisa. Que la red A reconozca aun así la onda P ancha real con 0,717, mientras la red B rechaza la sintética, indica que la duración se transfiere pero la forma no.
+
+Los sintéticos no mejoraron a la red con el 10\,\% de los reales: C iguala a B10 en QRS ancho, PR largo y QT largo, y es inferior en onda P ancha. Con 953 registros reales, sin embargo, B10 ya está cerca del techo de B, de modo que este contraste no representa un régimen de escasez de datos.
+% PENDIENTE: agregar la corrida con 1, 2 y 5 % de reales
+% (entrenar.py --solo-fracciones) y su lectura.
+
+Como antecedente, se realizó antes una evaluación exploratoria con ECGFounder \cite{li2025ecgfounder}, un modelo preentrenado sobre más de diez millones de electrocardiogramas, en su versión de una derivación. Esa evaluación tuvo dos limitaciones ---el modelo se entrenó con la derivación I y la morfología del generador proviene de MLII, y sus etiquetas absolutas no resultaron interpretables para el registro real--- pero mostró que los desvíos de PR y de onda P de la primera cohorte no eran patológicos en la escala clínica, lo que motivó la calibración de la Subsección~\ref{sec:calibracion}.
+
 \subsection{Alcance efectivo respecto a los resultados proyectados}
 
 Por transparencia metodológica, la Tabla~\ref{tab:alcance} contrasta los resultados proyectados en la propuesta de esta investigación con lo efectivamente alcanzado hasta la fecha.
@@ -243,20 +334,17 @@ Por transparencia metodológica, la Tabla~\ref{tab:alcance} contrasta los result
 \hline
 \textbf{Resultado proyectado} & \textbf{Estado actual} \\ \hline
 Framework de generación paramétrica en Python & Implementado y funcional para latidos sinusales normales \\ \hline
-Validación de fidelidad frente a MIT-BIH & Realizada sobre 1 registro de los 48 de la base \\ \hline
-Dataset de al menos 5.000 latidos sintéticos & 2.237 latidos parametrizados, más una cohorte de 50 series de 24 horas \\ \hline
-Motor de reglas fisiológicas para grupo control y grupo de enfermos & Implementado y verificado sobre una cohorte de 500 sanos y 500 enfermos, en un estrato de referencia fijo \\ \hline
-Validación del conjunto sintético con red neuronal preentrenada & No realizada \\ \hline
+Validación de fidelidad frente a MIT-BIH & Realizada sobre 1 registro de los 48 de la base, en el dominio del tiempo y de la frecuencia \\ \hline
+Dataset de al menos 5.000 latidos sintéticos & 2.237 latidos parametrizados, una cohorte de verificación de 1.000 sujetos, una cohorte de entrenamiento de 7.500 tiras de 10~s y una cohorte de 50 series de 24 horas \\ \hline
+Motor de reglas fisiológicas para grupo control y grupo de enfermos & Implementado, calibrado con PTB-XL+ y verificado sobre una cohorte de 500 sanos y 500 enfermos, en un estrato de referencia fijo \\ \hline
+Validación del conjunto sintético con red neuronal & Realizada con una red entrenada con sintéticos y evaluada sobre PTB-XL, con prueba inversa \\ \hline
 Publicación en revista indexada & Pendiente \\ \hline
 \end{tabular}
 \caption{Contraste entre los resultados proyectados y los alcanzados.}
 \label{tab:alcance}
 \end{table}
 
-% PENDIENTE (ronda 2): actualizar las filas de OE5 (análisis espectral) y OE6
-% (ECGFounder) con los resultados de scripts/oe5 y scripts/oe6.
-
-El motor de reglas fisiológicas se implementó y verificó con dos restricciones de alcance: opera sobre un único estrato de referencia, sin variar el sexo ni la edad, y construye sus etiquetas solo sobre intervalos morfológicos, sin intervención del exponente de escalamiento del ritmo. La validación del conjunto sintético mediante un modelo preentrenado queda fuera del alcance de esta etapa. En consecuencia, las conclusiones sobre fidelidad morfológica son válidas para ritmo sinusal normal, y las etiquetas del motor describen cómo se construyó cada sujeto, no una condición clínica.
+El motor de reglas fisiológicas se implementó y verificó con dos restricciones de alcance: opera sobre un único estrato de referencia, sin variar el sexo ni la edad, y construye sus etiquetas solo sobre intervalos morfológicos, sin intervención del exponente de escalamiento del ritmo. La validación con una red entrenada mostró que el motor reproduce de forma reconocible en registros reales las alteraciones de intervalo, como el QT largo, y no las que implican un cambio de forma, como el QRS ancho de los bloqueos de rama. En consecuencia, las conclusiones sobre fidelidad morfológica son válidas para ritmo sinusal normal, y las etiquetas del motor describen cómo se construyó cada sujeto, no una condición clínica.
 
 \subsection{Resultados de responsabilidad social}
 

@@ -62,7 +62,7 @@ El punto de partida de cada latido es una plantilla fija declarada en milisegund
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|c|c|c|c|}
+\resizebox{\textwidth}{!}{\begin{tabular}{|c|c|c|c|}
 \hline
 \textbf{Onda} & \textbf{Amplitud (fracción del pico)} & \textbf{Centro (ms desde R)} & \textbf{Anchos de cada rama (ms)} \\ \hline
 P & $0{,}002$ a $0{,}30$ & $-250$ a $-60$ & $8$ a $80$ \\ \hline
@@ -70,7 +70,7 @@ Q & $-0{,}30$ a $-0{,}002$ & $-70$ a $-5$ & $2$ a $30$ \\ \hline
 R & $0{,}30$ a $1{,}40$ & $-25$ a $+25$ & $2$ a $30$ \\ \hline
 S & $-0{,}70$ a $-0{,}005$ & $+5$ a $+90$ & $2$ a $40$ \\ \hline
 T & $0{,}01$ a $0{,}60$ & $+120$ a $+460$ & $15$ a $180$ \\ \hline
-\end{tabular}
+\end{tabular}}
 \caption{Restricciones de caja del ajuste. La línea base se acota a $\pm1{,}5$ desviaciones estándar en su desnivel y a $\pm3$ en su pendiente, por unidad de tiempo normalizado de la ventana.}
 \label{tab:cotas}
 \end{table}
@@ -107,14 +107,14 @@ El factor que relaciona ambas escalas depende de la forma del latido: para el QR
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|l|c|c|c|c|}
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|c|c|c|c|}
 \hline
 \textbf{Intervalo} & \textbf{Factor} & \textbf{IC 95\,\%} & \textbf{Con 75 / 300 vecinos} & \textbf{Rango en el motor (ms)} \\ \hline
 PR & 1,285 & 1,204--1,349 & 1,317 / 1,220 & 146,5--277,6 \\ \hline
 QRS & 0,816 & 0,775--0,862 & 0,817 / 0,863 & 62,0--93,0 \\ \hline
 QT & 0,954 & 0,944--0,960 & 0,944 / 0,955 & 322,3--450,1 \\ \hline
 Onda P & 1,396 & 1,284--1,516 & 1,396 / 1,324 & 114,4--195,4 \\ \hline
-\end{tabular}
+\end{tabular}}
 \caption{Factores entre la convención de $k = 2$ anchos y la medición clínica, estimados sobre los 150 latidos medianos de PTB-XL+ más parecidos a la plantilla, y rangos de Palhares et al.\ (hombres de 60 a 69 años) llevados a la escala del motor. La columna de vecinos muestra la sensibilidad del factor al número de latidos empleados.}
 \label{tab:calibracion}
 \end{table}
@@ -217,9 +217,17 @@ Se establecen los siguientes criterios de aceptación:
 
 Como control adicional del procedimiento de optimización se verifica, para cada parámetro, la proporción de latidos cuya solución converge exactamente sobre alguno de los límites de caja impuestos. Una proporción elevada indica que la restricción, y no los datos, está determinando el valor del parámetro, situación que invalida la interpretación fisiológica de dicho parámetro y exige recalibrar el límite correspondiente. Este control forma parte del protocolo de validación y sus resultados se reportan en la sección correspondiente.
 
+\subsubsection{Análisis en el dominio de la frecuencia}\label{sec:met_espectral}
+
+Las métricas anteriores comparan las señales punto a punto. El análisis espectral evalúa si la reconstrucción conserva la distribución de energía por frecuencia del latido real, que es lo que un filtro o un clasificador convolucional perciben. La densidad espectral de potencia de cada latido, en la misma ventana de 750~ms y en puntuación Z, se estima mediante un periodograma con ventana de Hann y 1.024 puntos de transformada; la resolución efectiva, fijada por el largo de la ventana, es de 1,33~Hz.
+
+Se calculan tres medidas. La primera es la distancia espectral logarítmica entre el latido real y su reconstrucción, es decir la raíz del error cuadrático medio entre ambos espectros expresados en decibeles, en la banda de 0,67 a 40~Hz. Como un valor aislado de esa distancia no tiene escala de referencia, se calcula la misma distancia entre cada latido real y el latido real siguiente: si la reconstrucción está más cerca de su latido que el latido vecino, el error del modelo es menor que la variabilidad natural del registro. La segunda es la correlación de Pearson entre los espectros en escala logarítmica. La tercera es el error relativo de potencia por banda ---0,67 a 5~Hz (ondas P y T y línea base), 5 a 15~Hz (núcleo del QRS), 15 a 40~Hz (componentes rápidas del QRS) y 40 a 100~Hz (fuera de la banda clínica)--- junto con la relación entre la potencia de la señal y la del residuo en cada banda.
+
+Las tres medidas comparan cada latido con su propia reconstrucción y, como Pearson y el RMSE, miden capacidad de representación. Para los latidos generados por el motor, que no copian ningún latido real, se mide en cambio la distancia espectral logarítmica de cada sujeto sano al espectro mediano de los latidos reales del registro, y se compara con la distribución de esa misma distancia entre los propios latidos reales.
+
 \subsubsection{Alcance de la validación}
 
-La validación descrita se aplica a la morfología de señales de ritmo sinusal normal. Los sujetos que produce el motor de reglas se validan con un criterio propio, descrito en la Subsección~\ref{sec:reglas}: se miden los intervalos sobre los parámetros efectivamente generados y se contrastan contra el rango que se le pidió al motor, de modo que la etiqueta de cada sujeto quede respaldada por una medición y no por la intención con que se generó. La evaluación de morfologías arrítmicas requiere criterios adicionales y queda fuera del alcance de la presente etapa.
+La validación descrita se aplica a la morfología de señales de ritmo sinusal normal. Los sujetos que produce el motor de reglas se validan con un criterio propio, descrito en la Subsección~\ref{sec:reglas}: se miden los intervalos sobre los parámetros efectivamente generados y se contrastan contra el rango que se le pidió al motor, de modo que la etiqueta de cada sujeto quede respaldada por una medición y no por la intención con que se generó. La utilidad de los sujetos generados para entrenar un clasificador se evalúa con el procedimiento de la Subsección~\ref{sec:met_red}. La evaluación de morfologías arrítmicas requiere criterios adicionales y queda fuera del alcance de la presente etapa.
 
 \subsection{Módulo de ritmo y acoplamiento con la morfología}
 
@@ -310,7 +318,7 @@ frecuencias bajas. Medido sobre el generador, el pico de la onda T pasa de
 1.300~ms. El exponente se expone como parámetro para poder contrastar
 las correcciones alternativas de uso clínico.
 
-\subsubsection{Construcción de la señal continua}
+\subsubsection{Construcción de la señal continua}\label{sec:senal}
 
 Cada latido se evalúa sobre un soporte fijo alrededor de su pico R, desde 600~ms
 antes hasta 900~ms después, escalado por el mismo factor que las ondas P y T
@@ -342,5 +350,61 @@ independiente: se pide al generador un exponente, se mide el exponente de la
 serie que produjo, y se caracteriza el sesgo del estimador en función del largo
 del registro. La validación no consiste en que la serie parezca real, sino en que
 posea, de manera medible, la propiedad que se le pidió.
+
+\subsection{Validación con una red neuronal entrenada}\label{sec:met_red}
+
+El sexto objetivo específico se aborda entrenando una red neuronal propia con datos sintéticos y evaluándola sobre registros reales etiquetados. La pregunta es si una red que solo vio sujetos generados por el motor reconoce las mismas alteraciones en electrocardiogramas reales; en la literatura de datos sintéticos, este diseño se conoce como entrenar con sintéticos y evaluar con reales. Se complementa con la prueba inversa, que entrena con datos reales y evalúa sobre los sintéticos.
+% PENDIENTE: confirmar con el director la nueva redacción del objetivo 6
+% («una red neuronal entrenada con datos sintéticos y evaluada con registros
+% reales» en lugar de «un modelo de red neuronal preentrenado»).
+
+\subsubsection{Datos reales}
+
+Se empleó PTB-XL \cite{wagner2020ptbxl}, una base de electrocardiogramas de doce derivaciones y diez segundos con diagnósticos codificados y una partición en diez subconjuntos (\emph{folds}) estratificados recomendada por sus autores. Se tomó la derivación II, la más cercana al canal MLII del que proviene la morfología del generador. Se definieron cuatro tareas binarias, cada una contra el grupo de sujetos sanos, con la correspondencia de la Tabla~\ref{tab:tareas}. Se consideró sano a todo registro con el código NORM y sin ningún otro código diagnóstico. PTB-XL no tiene un código de PR corto, por lo que los desvíos hacia abajo del motor no se evalúan. Del total se retuvieron 11.934 registros con alguna de esas etiquetas. Los \emph{folds} 1 a 8 se usan para entrenar y los \emph{folds} 9 y 10, juntos, para la prueba; se juntan porque el \emph{fold} 10 contiene solo 11 casos de QT largo.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Tarea} & \textbf{Códigos de PTB-XL} & \textbf{Desvío del motor} \\ \hline
+QRS ancho & CRBBB, CLBBB, IVCD & duración del QRS, hacia arriba \\ \hline
+PR largo & 1AVB, LPR & intervalo PR, hacia arriba \\ \hline
+QT largo & LNGQT & intervalo QT, hacia arriba \\ \hline
+Onda P ancha & LAO/LAE & duración de la onda P, hacia arriba \\ \hline
+\end{tabular}
+\caption{Correspondencia entre las tareas de clasificación, los códigos diagnósticos de PTB-XL y los desvíos del motor de reglas.}
+\label{tab:tareas}
+\end{table}
+
+\subsubsection{Datos sintéticos de entrenamiento}
+
+La cohorte de verificación de la Subsección~\ref{sec:reglas} comparte una sola morfología, usa una magnitud de desvío fija y produce señales sin ruido. Una red entrenada con ella puede separar las clases con un umbral exacto sobre un intervalo, o aprender la morfología de una sola persona y el aspecto de una señal limpia, ninguno de los cuales existe en los datos reales. Para entrenar se generó, con semilla 1, una cohorte de 1.500 sujetos sanos y 1.500 por cada alteración, con cuatro cambios respecto de la de verificación:
+
+\begin{itemize}
+    \item La magnitud del desvío se sortea de forma uniforme entre el 20 y el 60\,\% del ancho del rango normal. El mínimo mantiene cada desvío sobre el umbral de su etiqueta: en la escala clínica, el QRS queda entre 121,6 y 136,8~ms, el PR entre 236 y 277~ms, el QT entre 499 y 552~ms y la onda P entre 151,6 y 174,8~ms.
+    \item Las amplitudes de las ondas P, Q, S y T relativas a la onda R se multiplican por un factor log-normal de desviación estándar 0,25, y los anchos de la onda R por uno de desviación 0,15. Ninguno de los dos altera los intervalos, que se imponen después.
+    \item La variabilidad del ritmo de cada tira, medida como desviación estándar de los intervalos R-R, se sortea entre 20 y 80~ms. El intervalo medio se mantiene en 850~ms, porque el acoplamiento proporcional del QT con el R-R alteraría las etiquetas de QT a otras frecuencias.
+    \item A cada tira se le suma ruido blanco gaussiano con una relación señal/ruido entre 15 y 35~dB, una deriva de línea base de 0,05 a 0,5~Hz y una interferencia de red de 50~Hz.
+\end{itemize}
+
+\noindent Las magnitudes de la variabilidad morfológica y del ruido son decisiones de modelado sin fuente en el proyecto, y se declaran como tales. Cada sujeto produce una tira de diez segundos a 500~Hz, sintetizada con el procedimiento de la Subsección~\ref{sec:senal}.
+
+\subsubsection{Preprocesado, red y entrenamiento}
+
+Las tiras reales y sintéticas reciben el mismo preprocesado: filtro de ranura en 50~Hz, filtro pasabanda Butterworth de 0,67 a 40~Hz, resta de la mediana móvil de 0,4~s, puntuación Z por tira y remuestreo a 250~Hz, es decir 2.500 muestras por tira. La red es una ResNet unidimensional de unos 390.000 parámetros: una convolución de entrada seguida de cuatro bloques residuales con convoluciones de núcleo 7 y paso 2, de 32 a 128 canales, y una capa lineal sobre la concatenación del promedio y el máximo temporal de la última capa. Se entrena durante quince épocas con AdamW, tasa de aprendizaje de ciclo único con máximo $3\cdot10^{-3}$, lotes de 64 y entropía cruzada binaria ponderada por la frecuencia de cada clase. Durante el entrenamiento, cada lote recibe una aumentación genérica, igual para todas las configuraciones: escala de amplitud, ruido aditivo, deriva sinusoidal y desplazamiento circular.
+
+\subsubsection{Configuraciones y métricas}
+
+La misma red, con la misma receta, se entrena con cinco conjuntos y se evalúa siempre sobre los mismos registros reales de prueba:
+
+\begin{itemize}
+    \item \textbf{A}: solo sintéticos (el 80\,\% de la cohorte de entrenamiento; el 20\,\% restante se reserva).
+    \item \textbf{B}: reales de los \emph{folds} 1 a 8, como techo de referencia.
+    \item \textbf{B10}: un 10\,\% de esos reales, elegido al azar.
+    \item \textbf{C}: los sintéticos de A más ese mismo 10\,\% de reales, para evaluar si los sintéticos aportan cuando hay pocos datos reales.
+    \item \textbf{A sin variabilidad}: como A, pero con una cohorte sin los cuatro cambios anteriores, para medir su efecto.
+\end{itemize}
+
+La métrica es el área bajo la curva ROC (AUROC) de cada alteración contra los sujetos sanos, con un intervalo de confianza del 95\,\% por remuestreo. Cada configuración se entrena con tres semillas y se informa la media y la desviación estándar. Todas las redes se evalúan además sobre los sintéticos reservados: para A es un control de que la tarea se aprende dentro del dominio sintético, y para B y B10 es la prueba inversa. Si una red entrenada solo con registros reales reconoce como alterados a los sujetos que el motor etiquetó así, la etiqueta del motor es reconocible en los términos en que la aprenden los datos reales.
 
 \end{spacing}

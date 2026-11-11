@@ -18,14 +18,12 @@ A partir de los resultados obtenidos se extraen las siguientes conclusiones, org
     \item \textbf{Objetivo 4: módulo de ritmo.} El módulo genera la serie de intervalos con el exponente de escalamiento como parámetro de entrada, y ese exponente se recupera de la serie generada: sobre una cohorte de cincuenta sujetos sintéticos de veinticuatro horas, la correlación entre el exponente pedido y el medido es de 0,98, con un error absoluto medio de 0,014. El sesgo del estimador quedó caracterizado en función del largo del registro, lo que permite distinguir un exponente fisiológico de un artefacto de un registro corto. El acoplamiento selectivo con la morfología, que escala solo las ondas P y T con el intervalo R-R, es una ventaja estructural del enfoque paramétrico frente al modelo dinámico de referencia.
 
     \item \textbf{Objetivo 5: validación de fidelidad.} La correlación de Pearson y el RMSE se calcularon sobre todos los latidos del registro, junto con el control de saturación de las restricciones y el sesgo del residuo. Estas métricas miden la capacidad de representación del modelo sobre los latidos a los que se ajustó.
-    % PENDIENTE (ronda 2): incorporar la conclusión del análisis en el dominio
-    % de la frecuencia (scripts/oe5).
-    \textcolor{red}{[Pendiente: conclusión del análisis en el dominio de la frecuencia.]}
+    En el dominio de la frecuencia, la reconstrucción conserva la distribución de energía de cada latido con una distancia espectral mediana de 0,27~dB, menor que la que separa a dos latidos reales consecutivos (1,01~dB) en el 99,9\,\% de los casos, y con errores de potencia del orden del 1\,\% en la banda clínica. Los sujetos sanos generados por el motor caen dentro de la nube espectral de los latidos reales, aunque no en su centro.
 
-    \item \textbf{Objetivo 6: validación con un modelo preentrenado.}
-    % PENDIENTE (ronda 2): conclusión de la evaluación con ECGFounder
-    % (scripts/oe6), incluida la calibración de los rangos con PTB-XL+.
-    \textcolor{red}{[Pendiente: conclusión de la evaluación con ECGFounder.]}
+    \item \textbf{Objetivo 6: validación con una red neuronal.}
+    % PENDIENTE: agregar la conclusión del régimen de pocos datos reales
+    % (1, 2 y 5 %) cuando esté la corrida de --solo-fracciones.
+    Una red entrenada solo con sujetos sintéticos reconoce en registros reales de PTB-XL el QT largo (AUROC 0,918, igual al de una red entrenada con 953 registros reales), la onda P ancha (0,717) y, parcialmente, el PR largo (0,645), y no reconoce el QRS ancho (0,568). La prueba inversa coincide: una red entrenada con registros reales reconoce el QT largo y el PR largo sintéticos, y no la onda P ancha ni, en buena medida, el QRS ancho. El motor reproduce de forma transferible las alteraciones de intervalo, y no las que en un registro real implican un cambio de forma. La variabilidad morfológica y el ruido agregados a la cohorte de entrenamiento son necesarios para esa transferencia, y los sintéticos no mejoraron a una red que ya disponía de 953 registros reales.
 \end{itemize}
 
 \subsubsection{Conclusiones transversales}
@@ -33,7 +31,7 @@ A partir de los resultados obtenidos se extraen las siguientes conclusiones, org
 \begin{itemize}
     \item \textbf{Valor diagnóstico del residuo frente a la métrica agregada.} La correlación de Pearson de la primera iteración, 0,9647, era compatible con un modelo cuya mayoría de parámetros no estaba siendo ajustada por los datos. Dos indicadores auxiliares ---el conteo de parámetros saturados en sus cotas y el sesgo medio del residuo--- localizaron ambos defectos y guiaron una corrección que redujo el RMSE en un 87,6\,\%. Reportar métricas agregadas sin instrumentar el residuo habría dejado ese margen sin detectar.
 
-    \item \textbf{Interpretabilidad frente a los modelos generativos profundos.} Cada parámetro del modelo posee un significado fisiológico directo, propiedad de la que carecen las redes generativas antagónicas \cite{brophy2023generative}, y cada sujeto del motor trae anotada la causa de su etiqueta. Su valor práctico para la aumentación de datos depende de la validación externa del sexto objetivo.
+    \item \textbf{Interpretabilidad frente a los modelos generativos profundos.} Cada parámetro del modelo posee un significado fisiológico directo, propiedad de la que carecen las redes generativas antagónicas \cite{brophy2023generative}, y cada sujeto del motor trae anotada la causa de su etiqueta. Su valor práctico para la aumentación de datos queda acotado por los resultados del sexto objetivo: es real para las alteraciones de intervalo y nulo, por ahora, para las de forma.
 \end{itemize}
 
 \subsubsection{Sobre la hipótesis}
@@ -42,7 +40,7 @@ La hipótesis sostenía que es posible construir un generador de señales ECG si
 
 La primera parte queda sostenida para ritmo sinusal normal en un sujeto adulto. La expresión ``alta fidelidad'' requiere precisión: la primera iteración del modelo alcanzaba una correlación de 0,9647 con un RMSE de 0,3984, combinación que describe una reconstrucción morfológicamente correcta pero con una discrepancia de amplitud apreciable, porque la correlación de Pearson es invariante ante transformaciones afines. En el modelo actual ambas métricas son consistentes entre sí ---0,9969 y 0,0779 sobre una ventana que abarca el complejo completo--- y el residuo no presenta componente sistemática, de modo que la expresión es defendible dentro de ese alcance.
 
-La segunda parte queda sostenida en sentido constructivo: el motor produce dos clases cuyos intervalos medidos cumplen la etiqueta en los 1.000 sujetos de la cohorte. Que esas etiquetas correspondan a lo que un lector clínico o un clasificador entrenado sobre datos reales reconocería como normal o alterado es lo que evalúa el sexto objetivo.
+La segunda parte queda sostenida en sentido constructivo: el motor produce dos clases cuyos intervalos medidos cumplen la etiqueta en los 1.000 sujetos de la cohorte. Frente a un clasificador entrenado con datos reales, esas etiquetas son reconocibles para el QT largo y el PR largo, y no para el QRS ancho ni la onda P ancha, cuya contraparte real implica un cambio de forma que el motor no genera.
 
 Respecto de la proposición complementaria, relativa a la dinámica latido a latido, la evidencia la sostiene dentro de un alcance preciso: el exponente de escalamiento es un parámetro de entrada del generador y se recupera de la serie producida. No se afirma que un valor determinado del exponente corresponda a una condición clínica determinada: las distribuciones reportadas para poblaciones sanas y con enfermedad coronaria se solapan de manera sustancial \cite{costa2017fragmentation}, y una variabilidad elevada no constituye por sí misma un marcador de salud \cite{shaffer2017overview}. El exponente se emplea como coordenada de un régimen dinámico y no como etiqueta.
 
@@ -60,6 +58,8 @@ Las líneas de trabajo inmediatas se desprenden de las limitaciones identificada
     \item \textbf{Calibrar el módulo de ritmo contra registros reales de larga duración.} La verificación actual del exponente es interna. Falta el contraste externo, para el cual la \emph{Normal Sinus Rhythm RR Interval Database} de PhysioNet \cite{physionet_nsr2db} provee anotaciones de latido de 54 registros de larga duración de sujetos sanos. Un generador con dos regímenes de escalamiento permitiría además reproducir el cruce entre $\alpha_1$ y $\alpha_2$.
 
     \item \textbf{Extender el ajuste al conjunto de la base.} Los resultados presentados corresponden a un único registro de los 48 que componen la MIT-BIH. La generalización del método exige repetir el procedimiento sobre el conjunto completo y reportar la variabilidad entre registros.
+
+    \item \textbf{Reproducir las alteraciones de forma.} La validación con una red entrenada mostró que las alteraciones que en un registro real implican un cambio de morfología no se transfieren. Representar los bloqueos de rama, con su complejo RSR', y la onda P bifásica del agrandamiento auricular exige componentes adicionales en el modelo, no solo desplazar y ensanchar las ondas existentes.
 
     \item \textbf{Modelar alteraciones patológicas específicas.} Extensión declarada fuera del alcance de esta etapa: incorporar la elevación del segmento ST mediante funciones de lesión y la fibrilación auricular mediante estocasticidad del intervalo R-R con anulación de la onda P.
 \end{enumerate}
