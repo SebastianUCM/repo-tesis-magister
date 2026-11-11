@@ -233,6 +233,39 @@ Centro de la onda T fuera de la ventana de extracción & 0 de 1.000 \\ \hline
 
 En el grupo de enfermos, el rasgo desviado se distribuyó entre 131 sujetos por el intervalo PR, 132 por la duración del QRS, 130 por el intervalo QT y 107 por la duración de la onda P. En el grupo control, los intervalos cubren los rangos de referencia completos. Expresados en la escala clínica, el PR va de 114,0 a 216,0~ms, el QRS de 76,0 a 113,9~ms y el QT de 338,6 a 471,5~ms; en la escala del motor, los mismos sujetos van de 146,5 a 277,5~ms, de 62,0 a 93,0~ms y de 322,9 a 449,6~ms. El QT clínico alcanza valores por encima de 450~ms sin que ello constituya un error de etiquetado, por las razones expuestas en la Subsección~\ref{sec:reglas}: se trata de QT sin corregir por frecuencia. El centro de la onda T de los sujetos sanos se ubica entre 126 y 303~ms después del pico R; en ausencia de un rango de referencia para esa posición, la cifra se informa como observación y no como criterio de validez.
 
+La Figura~\ref{fig:ecg_papel} muestra un sujeto típico de cada grupo, en el formato de un electrocardiograma impreso, junto a un tramo real del registro 100.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig/figura_ecg_papel.png}
+\caption{Sujetos sintéticos de la cohorte calibrada, uno típico por grupo, en papel milimetrado a 25~mm/s y 10~mm/mV, con diez segundos por tira; la última tira es un tramo real del registro 100 (MLII). Los valores entre paréntesis son los intervalos impuestos, expresados en la escala clínica. La amplitud de los sintéticos se llevó a milivoltios igualando la altura mediana de la onda R de los sanos a la del registro real.}
+\label{fig:ecg_papel}
+\end{figure}
+
+\subsubsection{Medición independiente sobre la señal}\label{sec:medicion_indep}
+
+La verificación anterior mide los intervalos sobre los parámetros, con la misma convención con que se impusieron. Como control independiente, se sintetizó la tira de diez segundos de cada uno de los 1.000 sujetos y se midieron sus intervalos sobre la señal con un delineador externo que no conoce el modelo: el método por transformada wavelet discreta de NeuroKit2 \cite{makowski2021neurokit2}, tomando la mediana de cada intervalo entre los latidos de la tira. La Tabla~\ref{tab:medicion_indep} resume el resultado.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Intervalo} & \textbf{Spearman} & \textbf{Sesgo mediano} & \textbf{AUROC desvío alto} & \textbf{AUROC desvío bajo} & \textbf{Registro 100 real} \\ \hline
+PR & 0,94 & $+49$~ms & 0,992 & ---$^{a}$ & 128~ms \\ \hline
+QRS & 0,996$^{b}$ & $-11$~ms & 1,000 & ---$^{b}$ & 79~ms \\ \hline
+QT & 0,93 & $-13$~ms & 0,984 & 0,998 & 391~ms \\ \hline
+Onda P & 0,94 & $+50$~ms & 0,985$^{c}$ & 1,000 & 36~ms \\ \hline
+\end{tabular}}
+\caption{Intervalos medidos sobre la señal sintetizada con un delineador externo, frente a los declarados por el motor en la escala clínica. Spearman: correlación entre ambos. AUROC: separación entre los sujetos con ese rasgo desviado y los sanos. La última columna es la mediana del mismo delineador sobre 30 tiras reales del registro 100. ${}^{a}$Delineado solo en el 3\,\% de los casos. ${}^{b}$Sin los sujetos con QRS desviado hacia abajo, en los que el delineador falla (ver texto). ${}^{c}$Delineado en el 46\,\% de los casos.}
+\label{tab:medicion_indep}
+\end{table}
+
+El delineador completó la medición en el 85\,\% de las tiras y en el 93\,\% de las de sujetos sanos. Los intervalos que mide siguen a los declarados con correlaciones de Spearman entre 0,93 y 0,996, y separan de los sanos a los sujetos con un rasgo desviado con AUROC de 0,984 o más en todos los desvíos hacia arriba. Las etiquetas del motor son, por lo tanto, medibles sobre la señal por un método que no comparte su convención.
+
+Los valores absolutos difieren de los declarados en un sesgo sistemático: el delineador mide el PR y la onda P unos 50~ms más largos, y el QRS y el QT unos 12~ms más cortos. Sobre el registro real, el mismo delineador mide un PR de 128~ms, frente a los 158~ms que la calibración atribuye a la plantilla, y una onda P de 36~ms, un valor sin sentido fisiológico. El delineador tiene, por lo tanto, sesgos propios y distintos sobre señales reales y sintéticas, y su escala absoluta no sirve como referencia; lo que la medición independiente respalda es el orden y la separación de los sujetos, no la magnitud exacta de cada intervalo.
+
+Dos desvíos quedan sin verificación independiente. En el PR desviado hacia abajo, de 88,5~ms en la escala clínica, el delineador no encuentra el inicio de la onda P en el 97\,\% de las tiras, porque la onda queda pegada al complejo QRS. En el QRS desviado hacia abajo, de 66,5~ms, falla de forma sistemática y entrega una duración mediana de 260~ms, al confundir el fin del complejo con una onda posterior. Ninguno de los dos desvíos tiene etiqueta en PTB-XL, por lo que no intervienen en la validación con una red neuronal.
+
 \subsection{Validación en el dominio de la frecuencia}\label{sec:res_espectral}
 
 La reconstrucción conserva la distribución espectral de cada latido con un error menor que la variabilidad natural entre latidos del mismo registro. La Figura~\ref{fig:espectral} y la Tabla~\ref{tab:espectral} resumen el análisis de la Subsección~\ref{sec:met_espectral} sobre los 2.237 latidos.
