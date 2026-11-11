@@ -1,59 +1,72 @@
 \section{Anexos}
 \begin{spacing}{1.5}
 
-\subsection{Cronograma original de la propuesta}
+\subsection{Anexo A: reproducibilidad de los resultados}\label{anexo:reproducibilidad}
 
-El plan de trabajo de esta investigación se estructuró en tres semestres académicos, alineando cada fase con los objetivos específicos planteados, desde la fundamentación teórica hasta la validación del modelo generativo.
+Todos los resultados numéricos de este documento se obtienen con el código del repositorio \texttt{tesis-generador-ecg}, y cada uno queda registrado en un archivo de salida junto con el entorno de cálculo con que se produjo.
+% PENDIENTE: confirmar si el repositorio del código será público y agregar su URL.
 
-A continuación, se detalla el cronograma perteneciente al primer semestre del año 2025, enfocado en el diseño base:
+\subsubsection{Entorno}
 
-\begin{table}[H]
-\centering
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{|p{6.5cm}|c|c|c|c|c|c|}
-\hline
-\textbf{Actividad} & \textbf{Mar} & \textbf{Abr} & \textbf{May} & \textbf{Jun} & \textbf{Jul} & \textbf{Ago} \\ \hline
-Revisión del Estado del Arte & X & X & & & & \\ \hline
-Extracción y preprocesamiento MIT-BIH & & & X & X & & \\ \hline
-Diseño del modelo matemático Gaussiano & & & & X & X & X \\ \hline
-\end{tabular}
-\caption{Cronograma de Actividades Primer Semestre 2025.}
-\label{tab:crono1}
-\end{table}
+Los resultados se obtuvieron con Python 3.12.4, NumPy 2.1.3 y SciPy 1.16.0 en Windows, sobre un procesador Intel Core i7-7700HQ de cuatro núcleos. El archivo \texttt{scripts/generador/requirements.txt} fija esas versiones de NumPy y SciPy, porque L-BFGS-B converge a puntos ligeramente distintos entre versiones (Subsección~\ref{sec:mp}). La validación con una red neuronal requiere además PyTorch, y la medición independiente de intervalos, NeuroKit2. Las bases MIT-BIH, PTB-XL y PTB-XL+ se descargan de PhysioNet y no forman parte del repositorio.
 
-El cronograma perteneciente al segundo semestre del año 2025 contempla la implementación de los motores de optimización y reglas clínicas:
+El código incluye diez pruebas automatizadas (\texttt{pytest scripts/generador/tests}) que comprueban el gradiente analítico contra diferencias finitas, la equivalencia de la síntesis de la señal continua con la suma completa de los latidos, y la verificación y la calibración del motor de reglas.
+
+\subsubsection{Correspondencia entre resultados y procedimientos}
+
+La Tabla~\ref{tab:reproducibilidad} indica, para cada resultado, el procedimiento que lo produce y el archivo en que queda registrado. Las rutas son relativas a la carpeta \texttt{scripts/}.
 
 \begin{table}[H]
 \centering
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{|p{6.5cm}|c|c|c|c|c|c|}
+\small
+\resizebox{\textwidth}{!}{\begin{tabular}{|p{5.2cm}|p{5.4cm}|p{4.6cm}|}
 \hline
-\textbf{Actividad} & \textbf{Sep} & \textbf{Oct} & \textbf{Nov} & \textbf{Dic} & \textbf{Ene} & \textbf{Feb} \\ \hline
-Implementación optimización L-BFGS-B & X & X & & & & \\ \hline
-Motor de reglas demográficas & & X & X & X & & \\ \hline
-Modelado de patologías (FA, IAM) & & & & & X & X \\ \hline
-\end{tabular}
-\caption{Cronograma de Actividades Segundo Semestre 2025.}
-\label{tab:crono2}
+\textbf{Resultado} & \textbf{Procedimiento} & \textbf{Archivo de salida} \\ \hline
+Ajuste de los 2.237 latidos (Tablas~\ref{tab:metricas} y~\ref{tab:iteraciones}) & \path{generador/main_generator.py} \path{--procesos} \texttt{4} & \path{generador/dataset_v2_local.json} \\ \hline
+Métricas de fidelidad & \path{generador/validate_performance.py} & \path{generador/metricas_v2_local.json} \\ \hline
+Ablación de las correcciones (Tabla~\ref{tab:ablacion}) & \path{main_generator.py} con \path{--limites} y \path{--sin-linea-base} & \path{generador/metricas_*.json} \\ \hline
+Segunda gaussiana para la onda T & \path{generador/experimento_onda_t.py} & \path{generador/experimento_onda_t.json} \\ \hline
+Calibración con PTB-XL+ (Tabla~\ref{tab:calibracion}) & \path{diseno2/calibrar_rangos.py} y \path{diseno2/calibrar_plantilla.py} & \path{diseno2/resultados/factores_plantilla.json} \\ \hline
+Cohorte etiquetada (Tabla~\ref{tab:cohorte}) & \path{generador/reglas_fisiologicas.py} \path{--verificar} & \path{generador/salida_cohorte/cohorte.json} \\ \hline
+Cohorte sin calibrar, como referencia & \path{reglas_fisiologicas.py} \path{--sin-calibrar} \path{--salida} \path{salida_cohorte_sin_calibrar} & \path{generador/salida_cohorte_sin_calibrar/} \\ \hline
+Medición independiente de intervalos (Tabla~\ref{tab:medicion_indep}) & \path{oe3/medicion_independiente.py} & \path{oe3/resultados/medicion_independiente.json} \\ \hline
+Sesgo del estimador y cohorte de 24 horas (Tabla~\ref{tab:sesgo}) & \path{generador/validar_hurst.py} & \path{generador/validacion_hurst.json} \\ \hline
+Análisis espectral (Tabla~\ref{tab:espectral}) & \path{oe5/analisis_espectral.py} y \path{oe5/espectro_cohorte.py} & \path{oe5/resultados/*.json} \\ \hline
+Datos del diseño de validación con red neuronal & \path{diseno2/preparar_datos.py} \texttt{reales} y \path{sinteticos} & \path{salidas/diseno2/*.npz} \\ \hline
+Red neuronal (Tablas~\ref{tab:red} y~\ref{tab:inversa}) & \path{diseno2/entrenar.py} \path{--semillas} \texttt{0} \texttt{1} \texttt{2} \path{--ablacion} & \path{diseno2/resultados/diseno2_resultados.json} \\ \hline
+Régimen de pocos datos (Tabla~\ref{tab:fracciones}) & \path{entrenar.py} \path{--solo-fracciones} \texttt{0.01} \texttt{0.02} \texttt{0.05} \path{--semillas} \texttt{0} \texttt{1} \texttt{2} & \path{diseno2/resultados/diseno2_fracciones.json} \\ \hline
+Evaluación con ECGFounder (Anexo~B) & \path{oe6/cohorte_calibrada_v2.py}, \path{oe6/inferir_ecgfounder.py} y \path{oe6/analizar_diseno1.py} & \path{oe6/resultados/diseno1_calibrado_v2_resultados.json} \\ \hline
+\end{tabular}}
+\caption{Procedimiento y archivo de salida de cada resultado reportado.}
+\label{tab:reproducibilidad}
 \end{table}
 
-Finalmente, el cronograma perteneciente al primer semestre del año 2026 se centra en la validación estadística y redacción final:
+Los procedimientos con muestreo aleatorio reciben la semilla como parámetro y la registran en su salida: semilla 0 para la cohorte de verificación, 1 para la cohorte de entrenamiento de la red, 7 para la cohorte de veinticuatro horas, y 0, 1 y 2 para el entrenamiento de las redes. El ajuste morfológico no tiene componente aleatoria.
+
+\subsection{Anexo B: evaluación exploratoria con un modelo preentrenado}\label{anexo:ecgfounder}
+
+Antes de la validación con una red propia (Subsección~\ref{sec:met_red}), las señales sintéticas se evaluaron con ECGFounder \cite{li2025ecgfounder}, un modelo preentrenado sobre más de diez millones de electrocardiogramas y 150 etiquetas diagnósticas, en su versión de una derivación. Se le presentaron tiras de diez segundos a 500~Hz de los 1.000 sujetos de la cohorte etiquetada y 30 tiras reales del registro 100, con el preprocesado del repositorio oficial del modelo, sin reentrenarlo.
+
+La evaluación tiene dos limitaciones que impiden usarla como validación principal. El modelo de una derivación se entrenó con la derivación I, mientras que la morfología del generador proviene de MLII, cercana a la derivación II. Como consecuencia, las etiquetas absolutas no son interpretables: el propio registro real se clasificó como anormal, con una probabilidad de 0,999. Por eso se analizaron solo comparaciones relativas: el AUROC de cada subgrupo con un rasgo desviado contra los sujetos sanos, sobre la probabilidad de la etiqueta diagnóstica correspondiente.
 
 \begin{table}[H]
 \centering
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{|p{6.5cm}|c|c|c|c|c|c|}
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|l|c|c|}
 \hline
-\textbf{Actividad} & \textbf{Mar} & \textbf{Abr} & \textbf{May} & \textbf{Jun} & \textbf{Jul} & \textbf{Ago} \\ \hline
-Pruebas de validación (RMSE, Pearson) & X & X & & & & \\ \hline
-Análisis de resultados y métricas & & & X & & & \\ \hline
-Escritura del documento de Tesis & & & X & X & X & \\ \hline
-Entrega y Defensa de Tesis & & & & & & X \\ \hline
-\end{tabular}
-\caption{Cronograma de Actividades Primer Semestre 2026.}
-\label{tab:crono3}
+\textbf{Desvío} & \textbf{Etiqueta de ECGFounder} & \textbf{Cohorte sin calibrar} & \textbf{Cohorte calibrada} \\ \hline
+PR desviado hacia abajo & PR corto & 0,983 & 0,988 \\ \hline
+QRS desviado hacia arriba & QRS ancho & 0,751 & 0,891 \\ \hline
+QT desviado hacia arriba & QT prolongado & 0,599 & 0,721 \\ \hline
+PR desviado hacia arriba & bloqueo AV de primer grado & 0,505 & 0,614 \\ \hline
+Onda P desviada hacia arriba & agrandamiento auricular izquierdo & 0,183 & 0,119 \\ \hline
+QRS desviado hacia abajo (control) & QRS ancho & 0,017 & 0,028 \\ \hline
+\end{tabular}}
+\caption{AUROC de cada subgrupo contra los sujetos sanos en la probabilidad de la etiqueta de ECGFounder correspondiente, en la cohorte original y en la calibrada con PTB-XL+.}
+\label{tab:ecgfounder}
 \end{table}
+
+Tres observaciones de esta evaluación orientaron el trabajo posterior. La primera es la que motivó la calibración de la Subsección~\ref{sec:calibracion}: en la cohorte sin calibrar, el PR desviado hacia arriba equivalía a unos 188~ms clínicos y la onda P ancha a unos 111~ms, valores normales, de modo que el modelo acertaba al no marcarlos; con la calibración, el AUROC de QRS ancho y de QT prolongado sube. La segunda es que el modelo sigue la duración del QRS en ambos sentidos ---el control con QRS angosto queda, como corresponde, en 0,028--- y el PR corto. La tercera es que, aun calibrados, los desvíos de PR largo y de onda P ancha no se reconocen: en una curva de dosis y respuesta con PR de 160 a 360~ms, la probabilidad de bloqueo AV de primer grado no se aparta de cero, y el modelo interpreta la onda P alejada del complejo como una alteración del ritmo. Esa observación anticipa el resultado de la validación con una red propia: el motor reproduce los intervalos, pero no los cambios de forma que en un registro real acompañan a esas alteraciones.
 
 \end{spacing}
-  
+
 \newpage
