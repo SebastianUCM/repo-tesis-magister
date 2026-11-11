@@ -405,6 +405,8 @@ La misma red, con la misma receta, se entrena con cinco conjuntos y se evalúa s
     \item \textbf{A sin variabilidad}: como A, pero con una cohorte sin los cuatro cambios anteriores, para medir su efecto.
 \end{itemize}
 
+\noindent Como el 10\,\% de los reales resultó suficiente para acercarse al techo de B, el contraste entre reales solos y reales más sintéticos se repitió con el 1, el 2 y el 5\,\% de los reales, elegidos con muestreo estratificado por clase para que cada alteración conserve al menos un ejemplo.
+
 La métrica es el área bajo la curva ROC (AUROC) de cada alteración contra los sujetos sanos, con un intervalo de confianza del 95\,\% por remuestreo. Cada configuración se entrena con tres semillas y se informa la media y la desviación estándar. Todas las redes se evalúan además sobre los sintéticos reservados: para A es un control de que la tarea se aprende dentro del dominio sintético, y para B y B10 es la prueba inversa. Si una red entrenada solo con registros reales reconoce como alterados a los sujetos que el motor etiquetó así, la etiqueta del motor es reconocible en los términos en que la aprenden los datos reales.
 
 \end{spacing}

@@ -319,8 +319,30 @@ Las redes entrenadas con datos reales reconocen el QT largo sintético casi sin 
 Las dos direcciones coinciden. Las alteraciones que el motor produce desplazando una onda o alargando un intervalo sin cambiar su forma ---el QT largo y, en menor medida, el PR largo--- se reconocen en ambos sentidos. Las que en un registro real implican además un cambio de forma no se reproducen. El QRS ancho de PTB-XL corresponde sobre todo a bloqueos de rama, con morfologías como el complejo RSR' que el motor no genera porque solo estira las ondas Q y S. El agrandamiento auricular izquierdo suele acompañarse de una onda P bifásica o con muesca, mientras que el motor ensancha una gaussiana lisa. Que la red A reconozca aun así la onda P ancha real con 0,717, mientras la red B rechaza la sintética, indica que la duración se transfiere pero la forma no.
 
 Los sintéticos no mejoraron a la red con el 10\,\% de los reales: C iguala a B10 en QRS ancho, PR largo y QT largo, y es inferior en onda P ancha. Con 953 registros reales, sin embargo, B10 ya está cerca del techo de B, de modo que este contraste no representa un régimen de escasez de datos.
-% PENDIENTE: agregar la corrida con 1, 2 y 5 % de reales
-% (entrenar.py --solo-fracciones) y su lectura.
+
+\subsubsection{Régimen de pocos datos reales}
+
+Para evaluar la aumentación donde importa, se repitió el contraste con el 1, el 2 y el 5\,\% de los registros reales de entrenamiento, elegidos con muestreo estratificado por clase (Tabla~\ref{tab:fracciones}). Con el 1\,\% la red dispone de 96 registros: 15 con QRS ancho, 8 con PR largo, 1 con QT largo y 3 con onda P ancha.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Entrenada con} & \textbf{Reales} & \textbf{QRS ancho} & \textbf{PR largo} & \textbf{QT largo} & \textbf{Onda P ancha} \\ \hline
+1\,\% de los reales & 96 & 0,874 $\pm$ 0,033 & 0,769 $\pm$ 0,021 & 0,544 $\pm$ 0,042 & 0,600 $\pm$ 0,026 \\ \hline
+Sintéticos + 1\,\% & 96 & 0,842 $\pm$ 0,004 & 0,907 $\pm$ 0,005 & 0,798 $\pm$ 0,013 & 0,718 $\pm$ 0,007 \\ \hline
+2\,\% de los reales & 192 & 0,927 $\pm$ 0,007 & 0,962 $\pm$ 0,012 & 0,903 $\pm$ 0,010 & 0,726 $\pm$ 0,020 \\ \hline
+Sintéticos + 2\,\% & 192 & 0,884 $\pm$ 0,012 & 0,954 $\pm$ 0,006 & 0,897 $\pm$ 0,007 & 0,747 $\pm$ 0,005 \\ \hline
+5\,\% de los reales & 476 & 0,924 $\pm$ 0,007 & 0,980 $\pm$ 0,001 & 0,924 $\pm$ 0,018 & 0,886 $\pm$ 0,011 \\ \hline
+Sintéticos + 5\,\% & 476 & 0,907 $\pm$ 0,009 & 0,969 $\pm$ 0,001 & 0,939 $\pm$ 0,007 & 0,838 $\pm$ 0,010 \\ \hline
+\end{tabular}}
+\caption{AUROC sobre los registros reales de prueba con pocos datos reales de entrenamiento, con y sin los 6.000 sintéticos, media $\pm$ desviación estándar sobre tres semillas.}
+\label{tab:fracciones}
+\end{table}
+
+Con el 1\,\% de los reales, los sintéticos mejoran las tres alteraciones de intervalo: el PR largo sube de 0,769 a 0,907, el QT largo de 0,544 a 0,798 y la onda P ancha de 0,600 a 0,718, y la variabilidad entre semillas se reduce. En QRS ancho, en cambio, el AUROC baja de 0,874 a 0,842. Desde el 2\,\%, la ventaja desaparece: las dos configuraciones se igualan en PR y QT largos, y la red con sintéticos queda por debajo en QRS ancho en todas las fracciones y en onda P ancha con el 5\,\%. El QT largo con el 1\,\% merece una precisión: con un solo caso real de entrenamiento, el 0,798 de la red aumentada proviene casi por completo de los sintéticos, y es incluso inferior al 0,918 de la red entrenada solo con ellos.
+
+La aumentación con el generador, por lo tanto, aporta cuando los registros reales de una alteración se cuentan por unidades y la alteración es de intervalo, y deja de aportar ---o resta, en las alteraciones de forma--- en cuanto la red dispone de algunas decenas de ejemplos reales.
 
 Como antecedente, se realizó antes una evaluación exploratoria con ECGFounder \cite{li2025ecgfounder}, un modelo preentrenado sobre más de diez millones de electrocardiogramas, en su versión de una derivación. Esa evaluación tuvo dos limitaciones ---el modelo se entrenó con la derivación I y la morfología del generador proviene de MLII, y sus etiquetas absolutas no resultaron interpretables para el registro real--- pero mostró que los desvíos de PR y de onda P de la primera cohorte no eran patológicos en la escala clínica, lo que motivó la calibración de la Subsección~\ref{sec:calibracion}.
 
