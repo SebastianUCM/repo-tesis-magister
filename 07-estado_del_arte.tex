@@ -42,6 +42,18 @@ Rijnbeek et al. \cite{rijnbeek2001normal} establecieron límites normales propio
 
 Rautaharju et al. \cite{rautaharju2009aha}, en las recomendaciones de la AHA/ACCF/HRS, fijan umbrales de QT prolongado distintos para mujeres y hombres. Palhares et al. \cite{palhares2017normal}, sobre 486.014 registros de atención primaria en Brasil, reportan límites normales por sexo y grupo de edad, y constituyen además un antecedente latinoamericano de gran escala. Incorporar estas diferencias en un generador sintético permitiría reducir sesgos de sexo y edad en el entrenamiento de algoritmos de IA.
 
+\subsection{Escala latinoamericana y nacional}
+
+Las tres líneas anteriores son, en su mayoría, de escala internacional. Para situar el trabajo en la región se hizo una búsqueda en OpenAlex, el 11 de noviembre de 2026, de trabajos con al menos una institución de Argentina, Brasil, Chile, Colombia, Cuba, Ecuador, México, Perú, Uruguay o Venezuela que mencionaran en el título o el resumen alguno de los términos \emph{synthetic ECG}, \emph{synthetic electrocardiogram}, \emph{ECG simulation}, \emph{ECG generation}, \emph{ECG generator}, \emph{electrocardiogram generation} o \emph{ECG data augmentation}. La búsqueda devolvió 24 trabajos, de los cuales más de la mitad no trata de generación de ECG ---varios corresponden a la gonadotropina coriónica equina, abreviada eCG---. La escasez es en sí misma un resultado.
+
+\textbf{Latinoamérica.} Los trabajos pertinentes se reparten entre las mismas familias que a escala internacional. En la línea de modelos dinámicos, grupos de México y de Brasil generan señales de tipo ECG mediante redes de osciladores: Quiroz-Juárez et al.\ \cite{quirozjuarez2018rlc} con osciladores RLC excitados periódicamente, y Cheffer de Melo et al.\ \cite{chefferdemelo2021heart} con osciladores no lineales acoplados para analizar el ritmo cardíaco. En la línea de modelos generativos profundos, Moro et al.\ \cite{moro2025transformer}, en Brasil, evalúan redes antagónicas basadas en \emph{transformers} para generar series temporales de ECG, y Barbosa-Casanova et al.\ \cite{barbosacasanova2025spectrogram}, en Colombia y España, comparan redes antagónicas que generan espectrogramas de ECG. El antecedente más cercano a este trabajo es el de Rincón Soler et al.\ \cite{rinconsoler2022gmm}, en Argentina, que evalúan un modelo de mezcla de gaussianas para generar ECG sintéticos durante un procedimiento de angioplastia: la misma primitiva que aquí se usa, aplicada a una condición isquémica aguda y no a la construcción de cohortes etiquetadas.
+
+La contribución más influyente de la región no es un generador sino un conjunto de datos y un clasificador. La red de telesalud de Minas Gerais, en Brasil, sostiene a la vez los límites normales de Palhares et al.\ \cite{palhares2017normal}, que este trabajo usa como fuente de sus rangos, y el clasificador profundo de doce derivaciones de Ribeiro et al.\ \cite{ribeiro2020automatic}, entrenado con más de dos millones de registros. Es decir, la región ya produce datos reales a gran escala; lo que no aparece en la búsqueda es su uso como referencia para generar datos sintéticos con propiedades declaradas.
+
+\textbf{Chile.} En el país, la modelación cardíaca se ha desarrollado sobre todo en la línea biofísica: Sahli Costabal, Hurtado y Kuhl \cite{sahlicostabal2016purkinje}, con participación de la Pontificia Universidad Católica de Chile, propusieron un método para generar redes de Purkinje en modelos del corazón humano, que es la base de la simulación de la secuencia de activación ventricular. En análisis de señales, Espinosa, Talero y Weinstein \cite{espinosa2020entropy}, con la Universidad de Valparaíso, estudiaron cómo el retardo y la frecuencia de muestreo afectan las medidas de regularidad de señales ECG y EEG. La línea más directamente vinculada a esta tesis es la del grupo del director en la Universidad Católica del Maule, que entrena clasificadores con series monofractales sintéticas de exponente prescrito \cite{lopez2023congestive,lopez2024monofractal,lopez2025monofractal}. La búsqueda no encontró, con las palabras clave empleadas, trabajos chilenos de generación de formas de onda de ECG sintéticas. Tampoco se encontraron rangos de referencia del ECG derivados de población chilena; el antecedente regional más cercano es el brasileño, y una revisión sistemática con autores latinoamericanos documenta cambios electrocardiográficos propios de poblaciones sanas de gran altitud \cite{parodi2022altitude}, pertinentes para el norte del país.
+
+\textbf{Tensión entre las escalas.} La evidencia internacional y la regional coinciden en el diagnóstico ---faltan datos etiquetados y los modelos generativos profundos no ofrecen control paramétrico---, pero difieren en el énfasis. A escala internacional, la generación sintética de ECG es una línea consolidada, con modelos dinámicos de referencia y una literatura creciente de redes antagónicas. En la región, los trabajos de generación son escasos, recientes y dispersos, mientras que el esfuerzo se ha concentrado en reunir datos reales de gran escala y en entrenar clasificadores con ellos. Ninguno de los trabajos regionales encontrados construye cohortes etiquetadas a partir de rangos de referencia publicados, ni trata la dinámica latido a latido como un parámetro. Esta tesis se ubica en ese espacio: usa una referencia latinoamericana de gran escala para definir sus rangos y la integra con la línea de series monofractales sintéticas desarrollada en la propia universidad.
+
 \subsection{Síntesis: la brecha entre las tres líneas}
 
 El mapa anterior deja una brecha con una forma precisa, y conviene enunciarla como tal antes que como una carencia genérica.
@@ -51,17 +63,5 @@ La línea de los generadores de forma de onda produce morfología, pero con una 
 Ninguna de las tres ocupa la intersección: un generador en el que la morfología esté ajustada latido a latido sobre datos reales \emph{y} el ritmo tenga un exponente de escalamiento como parámetro de entrada verificable. Esa intersección es la contribución de este trabajo, y su enunciado se sostiene sobre el reconocimiento explícito del antecedente de 2002 y no sobre su omisión.
 
 Una segunda brecha se aborda solo en parte: la ausencia de herramientas que combinen la flexibilidad de las gaussianas con los rangos de referencia de la clínica \cite{palhares2017normal,rautaharju2009aha}. El motor de reglas fisiológicas de este trabajo (tercer objetivo específico) impone intervalos dentro y fuera de rangos normales publicados, pero sobre un único estrato de sexo y edad; la estratificación demográfica se declara como trabajo futuro.
-
-% PENDIENTE (indicación del profesor, conservada del documento anterior).
-% El marco referencial empírico solicitado no está desarrollado: falta describir
-% los resultados en escala internacional, latinoamericana y nacional, tensionar
-% la evidencia encontrada e integrarla en una conclusión. Las tres líneas de
-% trabajo mapeadas arriba son de escala internacional; falta la búsqueda
-% regional y nacional, que requiere acceso a bases bibliográficas.
-%
-% Preguntas guía originales:
-% ¿Qué se sabe sobre el tema? ¿Qué no se sabe? ¿Dónde se estudió, quién lo
-% estudió? ¿Qué se dijo al respecto? ¿Qué hace falta estudiar? ¿Cuál es la
-% pertinencia de estudiarlo?
 
 \end{spacing} 
